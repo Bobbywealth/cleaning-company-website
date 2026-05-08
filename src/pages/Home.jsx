@@ -162,7 +162,7 @@ const Home = () => {
                 <span className="font-semibold">(555) 123-4567</span>
               </a>
               <Button 
-                onClick={() => scrollToSection(bookingRef)}
+                onClick={() => navigate('/quote')}
                 className="hidden md:inline-flex bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold shadow-lg shadow-cyan-500/30 transition-all hover:shadow-cyan-500/50"
               >
                 Get Free Quote
@@ -236,7 +236,7 @@ const Home = () => {
                   </button>
                 </div>
                 <Button 
-                  onClick={() => scrollToSection(bookingRef)}
+                  onClick={() => navigate('/quote')}
                   className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold py-4"
                 >
                   Get Free Quote Now
@@ -262,7 +262,7 @@ const Home = () => {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Button 
-                onClick={() => scrollToSection(bookingRef)}
+                onClick={() => navigate('/quote')}
                 className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-base font-bold shadow-lg shadow-cyan-500/30"
                 aria-label="Book professional cleaning service in New Jersey"
               >
@@ -353,7 +353,7 @@ const Home = () => {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {services.map((service) => (
-              <Card key={service.title} className="bg-white/10 border-white/10 rounded-3xl hover:bg-white/[0.14] transition cursor-pointer group" onClick={() => scrollToSection(bookingRef)}>
+              <Card key={service.title} className="bg-white/10 border-white/10 rounded-3xl hover:bg-white/[0.14] transition cursor-pointer group" onClick={() => navigate('/quote')}>
                 <CardContent className="p-6">
                   <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-400/30 to-blue-400/30 flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
                     {service.icon}
@@ -412,7 +412,7 @@ const Home = () => {
                     ))}
                   </div>
                   <Button 
-                    onClick={() => scrollToSection(bookingRef)}
+                    onClick={() => navigate('/quote')}
                     className={`w-full mt-8 rounded-xl ${pkg.featured ? "bg-slate-950 text-white hover:bg-slate-800 shadow-lg" : "bg-white text-slate-950 hover:bg-slate-200"}`}
                     aria-label={`Request quote for ${pkg.name} in New Jersey`}
                   >
