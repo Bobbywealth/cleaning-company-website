@@ -91,20 +91,16 @@ const Home = () => {
 
       {/* Enhanced Header */}
       <header className={`relative z-50 transition-all duration-300 ${scrolled ? 'bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-cyan-500/10' : 'bg-slate-950/75 backdrop-blur-xl'} border-b border-white/10`}>
-        {/* Top bar with phone */}
+        {/* Top bar with info */}
         <div className="hidden md:block bg-cyan-500/10 border-b border-cyan-500/20">
           <div className="max-w-7xl mx-auto px-5 py-2 flex justify-between items-center text-sm">
             <div className="flex items-center gap-6">
               <span className="text-slate-300">🏆 Rated #1 in New Jersey</span>
               <span className="text-slate-400">•</span>
               <span className="text-slate-300">⭐ 4.9/5 from 287+ Reviews</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <a href="tel:+18622854949" className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition">
-                <span>📞</span>
-                <span>(862) 285-4949</span>
-              </a>
-              <span className="text-slate-500">|</span>
+              <span className="text-slate-400">•</span>
+              <span className="text-slate-300">📞 (862) 285-4949</span>
+              <span className="text-slate-400">•</span>
               <span className="text-slate-300">Mon-Sun: 7AM - 8PM</span>
             </div>
           </div>
@@ -154,13 +150,6 @@ const Home = () => {
 
             {/* CTA & Mobile Toggle */}
             <div className="flex items-center gap-4">
-              <a 
-                href="tel:+18622854949" 
-                className="hidden md:flex items-center gap-2 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-xl transition border border-cyan-400/30"
-              >
-                <span>📞</span>
-                <span className="font-semibold">(862) 285-4949</span>
-              </a>
               <Button 
                 onClick={() => navigate('/quote')}
                 className="hidden md:inline-flex bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold shadow-lg shadow-cyan-500/30 transition-all hover:shadow-cyan-500/50"
