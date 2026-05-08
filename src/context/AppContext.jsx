@@ -32,6 +32,13 @@ export const AppProvider = ({ children }) => {
   const [stats, setStats] = useState({ newLeads: 0, bookedJobs: 0, totalJobs: 0, completedJobs: 0 });
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
+  const [theme, setTheme] = useState(() => {
+    // Check localStorage or default to dark
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dashboardTheme') || 'dark';
+    }
+    return 'dark';
+  });
 
   // Initialize data and check auth on mount
   useEffect(() => {
@@ -39,6 +46,17 @@ export const AppProvider = ({ children }) => {
     checkAuthStatus();
     refreshData();
   }, []);
+
+  // Save theme to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dashboardTheme', theme);
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   const checkAuthStatus = () => {
     const auth = checkAuth();
@@ -125,6 +143,8 @@ export const AppProvider = ({ children }) => {
     stats,
     loading,
     notification,
+    theme,
+    toggleTheme,
     login,
     logout,
     submitLead,
