@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import LeadsList from '@/components/LeadsList';
 import JobsManager from '@/components/JobsManager';
 import CustomerProfile from '@/components/CustomerProfile';
+import MarketingCenter from '@/components/MarketingCenter';
 
 const adminModules = [
   { icon: "📋", label: "Lead & Quote CRM", color: "from-cyan-400/20 to-cyan-600/20", tab: 'leads' },
@@ -46,6 +47,7 @@ const AdminDashboard = () => {
     { id: 'leads', label: 'Leads', icon: '👥', badge: stats.newLeads > 0 ? stats.newLeads : null },
     { id: 'jobs', label: 'Jobs', icon: '📅', badge: jobs.length > 0 ? jobs.length : null },
     { id: 'customers', label: 'Customers', icon: '⭐' },
+    { id: 'marketing', label: 'Marketing', icon: '📣' },
   ];
 
   // Calculate conversion rate
@@ -452,6 +454,17 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </motion.div>
+        )}
+
+        {/* Marketing Tab */}
+        {activeTab === 'marketing' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MarketingCenter theme={theme} />
           </motion.div>
         )}
       </main>
