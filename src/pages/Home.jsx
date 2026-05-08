@@ -98,11 +98,8 @@ const Home = () => {
               <span className="text-slate-300">🏆 Rated #1 in New Jersey</span>
               <span className="text-slate-400">•</span>
               <span className="text-slate-300">⭐ 4.9/5 from 287+ Reviews</span>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-300">📞 (862) 285-4949</span>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-300">Mon-Sun: 7AM - 8PM</span>
             </div>
+            <span className="text-slate-300">Mon-Sun: 7AM - 8PM</span>
           </div>
         </div>
 
@@ -150,6 +147,13 @@ const Home = () => {
 
             {/* CTA & Mobile Toggle */}
             <div className="flex items-center gap-4">
+              <a 
+                href="tel:+18622854949" 
+                className="hidden md:flex items-center gap-2 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-xl transition border border-cyan-400/30"
+              >
+                <span>📞</span>
+                <span className="font-semibold">(862) 285-4949</span>
+              </a>
               <Button 
                 onClick={() => navigate('/quote')}
                 className="hidden md:inline-flex bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold shadow-lg shadow-cyan-500/30 transition-all hover:shadow-cyan-500/50"
