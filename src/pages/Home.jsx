@@ -100,9 +100,9 @@ const Home = () => {
               <span className="text-slate-300">⭐ 4.9/5 from 287+ Reviews</span>
             </div>
             <div className="flex items-center gap-4">
-              <a href="tel:+15551234567" className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition">
+              <a href="tel:+18622854949" className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition">
                 <span>📞</span>
-                <span>(555) 123-4567</span>
+                <span>(862) 285-4949</span>
               </a>
               <span className="text-slate-500">|</span>
               <span className="text-slate-300">Mon-Sun: 7AM - 8PM</span>
@@ -155,11 +155,11 @@ const Home = () => {
             {/* CTA & Mobile Toggle */}
             <div className="flex items-center gap-4">
               <a 
-                href="tel:+15551234567" 
+                href="tel:+18622854949" 
                 className="hidden md:flex items-center gap-2 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-xl transition border border-cyan-400/30"
               >
                 <span>📞</span>
-                <span className="font-semibold">(555) 123-4567</span>
+                <span className="font-semibold">(862) 285-4949</span>
               </a>
               <Button 
                 onClick={() => navigate('/quote')}
@@ -225,8 +225,8 @@ const Home = () => {
                   📅 Book Now
                 </button>
                 <div className="pt-4 border-t border-white/10">
-                  <a href="tel:+15551234567" className="flex items-center gap-3 py-3 px-4 text-cyan-400 font-semibold">
-                    📞 (555) 123-4567
+                  <a href="tel:+18622854949" className="flex items-center gap-3 py-3 px-4 text-cyan-400 font-semibold">
+                    📞 (862) 285-4949
                   </a>
                   <button 
                     onClick={handleGetQuote} 
@@ -460,7 +460,7 @@ const Home = () => {
             <div className="mt-8 space-y-4 text-slate-300">
               <p className="flex items-center gap-3">
                 <span className="text-2xl" aria-hidden="true">📞</span>
-                <a href="tel:+15551234567" className="hover:text-cyan-300 text-lg">(555) 123-4567</a>
+                <a href="tel:+18622854949" className="hover:text-cyan-300 text-lg">(862) 285-4949</a>
               </p>
               <p className="flex items-center gap-3">
                 <span className="text-2xl" aria-hidden="true">✉️</span>
@@ -531,7 +531,7 @@ const Home = () => {
               <div>
                 <h4 className="font-bold text-white mb-4">Contact</h4>
                 <ul className="space-y-2 text-slate-400 text-sm">
-                  <li>📞 (555) 123-4567</li>
+                  <li>📞 (862) 285-4949</li>
                   <li>✉️ info@360cleaningco.com</li>
                   <li>🕐 Mon-Sun: 7AM - 8PM</li>
                 </ul>

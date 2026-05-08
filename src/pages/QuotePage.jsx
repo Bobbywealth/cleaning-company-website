@@ -158,11 +158,11 @@ const QuotePage = () => {
             <h3 className="text-xl font-bold mb-4">Need to Talk Right Now?</h3>
             <p className="text-slate-300 mb-4">Our NJ team is standing by to help!</p>
             <a 
-              href="tel:+15551234567" 
+              href="tel:+18622854949" 
               className="inline-flex items-center gap-3 bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xl px-8 py-4 rounded-2xl transition shadow-lg"
             >
               <span className="text-2xl">📞</span>
-              (555) 123-4567
+              (862) 285-4949
             </a>
             <p className="text-slate-400 mt-4 text-sm">Mon-Sun: 7AM - 8PM</p>
           </div>

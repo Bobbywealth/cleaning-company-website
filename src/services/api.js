@@ -12,7 +12,7 @@ const STORAGE_KEYS = {
 export const initializeDemoData = () => {
   if (!localStorage.getItem(STORAGE_KEYS.JOBS)) {
     const demoJobs = [
-      { id: 1, client: "Johnson Residence", service: "Deep Clean", date: "Today, 10:00 AM", status: "Confirmed", phone: "(555) 123-4567", email: "johnson@email.com" },
+      { id: 1, client: "Johnson Residence", service: "Deep Clean", date: "Today, 10:00 AM", status: "Confirmed", phone: "(862) 285-4949", email: "johnson@email.com" },
       { id: 2, client: "Bright Dental Office", service: "Commercial", date: "Today, 7:00 PM", status: "Scheduled", phone: "(555) 234-5678", email: "brightdental@office.com" },
       { id: 3, client: "Miller Apartment", service: "Move-Out", date: "Tomorrow, 1:30 PM", status: "Pending", phone: "(555) 345-6789", email: "miller@email.com" }
     ];

@@ -194,7 +194,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
                 value={step1Data.phone}
                 onChange={(e) => setStep1Data({...step1Data, phone: e.target.value})}
                 className={`w-full rounded-2xl bg-white border-2 ${step1Errors.phone ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
-                placeholder="(555) 123-4567"
+                placeholder="(862) 285-4949"
                 type="tel"
               />
               {step1Errors.phone && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.phone}</p>}
