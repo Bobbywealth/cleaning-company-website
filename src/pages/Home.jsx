@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import BookingForm from '@/components/BookingForm';
 
 const services = [
   {
@@ -472,9 +471,25 @@ const Home = () => {
                 <span>Serving <strong className="text-cyan-400">All of New Jersey</strong> including Jersey City, Newark, Hoboken, and surrounding areas</span>
               </p>
             </div>
+            <Button 
+              onClick={() => navigate('/quote')}
+              className="mt-8 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-lg font-bold shadow-lg shadow-cyan-500/30"
+            >
+              Get Your Free Quote →
+            </Button>
           </div>
 
-          <BookingForm />
+          <Card className="bg-white/10 border-white/10 rounded-3xl p-8 text-center">
+            <div className="text-6xl mb-4">📋</div>
+            <h3 className="text-2xl font-bold text-white mb-4">Ready to Book?</h3>
+            <p className="text-slate-300 mb-6">Fill out our simple form and get a personalized quote in under 2 minutes.</p>
+            <Button 
+              onClick={() => navigate('/quote')}
+              className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold py-4"
+            >
+              Go to Quote Form →
+            </Button>
+          </Card>
         </section>
 
         {/* Footer */}
