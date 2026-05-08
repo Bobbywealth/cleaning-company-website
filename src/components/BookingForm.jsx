@@ -178,7 +178,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           
           <form onSubmit={handleStep1Submit} className="space-y-6">
             <div>
-              <label className="block text-lg font-semibold text-slate-700 mb-2">Full Name *</label>
+              <label className="block text-lg font-semibold text-slate-700 mb-2">Name *</label>
               <input
                 value={step1Data.name}
                 onChange={(e) => setStep1Data({...step1Data, name: e.target.value})}
