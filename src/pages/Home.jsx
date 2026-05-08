@@ -1,0 +1,375 @@
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import BookingForm from '@/components/BookingForm';
+
+const services = [
+  {
+    icon: "🏠",
+    title: "Residential Cleaning",
+    desc: "Routine home cleaning, deep cleaning, move-in/move-out cleaning, and customized weekly or monthly plans for New Jersey homeowners.",
+    cityKeywords: "house cleaning NJ, home cleaning New Jersey"
+  },
+  {
+    icon: "🏢",
+    title: "Commercial Cleaning",
+    desc: "Office, retail, salon, restaurant, and facility cleaning with reliable crews and recurring service options across New Jersey.",
+    cityKeywords: "office cleaning NJ, business cleaning New Jersey"
+  },
+  {
+    icon: "✨",
+    title: "Deep Cleaning",
+    desc: "Detailed cleaning for kitchens, bathrooms, floors, appliances, baseboards, windows, and high-touch surfaces in New Jersey homes.",
+    cityKeywords: "deep cleaning NJ, thorough cleaning New Jersey"
+  },
+  {
+    icon: "🛡️",
+    title: "Post-Construction",
+    desc: "Dust removal, debris wipe-downs, floor cleanup, and final polish after renovations or construction projects in New Jersey.",
+    cityKeywords: "post construction cleaning NJ, after builders cleaning"
+  },
+];
+
+const packages = [
+  {
+    name: "Basic Refresh",
+    price: "From $99",
+    details: ["Kitchen + bathroom wipe-down", "Sweeping and mopping", "Trash removal", "Surface dusting"],
+  },
+  {
+    name: "Deep Clean",
+    price: "From $199",
+    details: ["Full home detail", "Appliance exterior cleaning", "Baseboards", "Interior windows", "High-touch sanitizing"],
+    featured: true,
+  },
+  {
+    name: "Commercial Plan",
+    price: "Custom Quote",
+    details: ["Daily/weekly service", "Restroom maintenance", "Floor care", "Supply restocking", "Inspection reports"],
+  },
+];
+
+const serviceAreas = [
+  "Jersey City", "Newark", "Hoboken", "New Brunswick", "Trenton", 
+  "Edison", "Paterson", "Elizabeth", "Camden", "Atlantic City",
+  "Princeton", "Morristown", "Asbury Park", "Weehawken", "Bayonne"
+];
+
+const Home = () => {
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const bookingRef = useRef(null);
+  const servicesRef = useRef(null);
+  const packagesRef = useRef(null);
+
+  const scrollToSection = (ref) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    setMobileOpen(false);
+  };
+
+  const handleGetQuote = () => {
+    navigate('/admin');
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="fixed inset-0 pointer-events-none opacity-40">
+        <div className="absolute top-0 left-1/4 h-72 w-72 rounded-full bg-cyan-500 blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 h-72 w-72 rounded-full bg-blue-700 blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="relative z-10 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl sticky top-0">
+        <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src="https://iili.io/Btud5oF.th.png"
+              alt="360 Cleaning Co. - Professional Cleaning Services in New Jersey"
+              className="h-14 w-14 rounded-2xl object-cover border border-white/10 shadow-lg shadow-cyan-500/20"
+            />
+            <div>
+              <p className="font-bold text-xl leading-none">360 Cleaning Co.</p>
+              <p className="text-xs text-cyan-200">New Jersey's Trusted Cleaners</p>
+            </div>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-7 text-sm text-slate-200" role="navigation" aria-label="Main navigation">
+            <button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-300" aria-label="View our cleaning services in NJ">Services</button>
+            <button onClick={() => scrollToSection(packagesRef)} className="hover:text-cyan-300" aria-label="View our NJ pricing packages">Pricing</button>
+            <button onClick={() => scrollToSection(bookingRef)} className="hover:text-cyan-300" aria-label="Book cleaning service in NJ">Book</button>
+            <button onClick={handleGetQuote} className="hover:text-cyan-300 flex items-center gap-2" aria-label="Admin login">🔐 Admin</button>
+          </nav>
+
+          <Button 
+            onClick={() => scrollToSection(bookingRef)}
+            className="hidden md:inline-flex bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-2xl"
+            aria-label="Get a free cleaning quote in New Jersey"
+          >
+            Get a Quote
+          </Button>
+          <button className="md:hidden text-2xl" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle mobile menu">
+            {mobileOpen ? "×" : "☰"}
+          </button>
+        </div>
+        {mobileOpen && (
+          <nav className="md:hidden px-5 pb-5 space-y-3 text-slate-200" role="navigation">
+            <button onClick={() => scrollToSection(servicesRef)} className="block w-full text-left">Services</button>
+            <button onClick={() => scrollToSection(packagesRef)} className="block w-full text-left">Pricing</button>
+            <button onClick={() => scrollToSection(bookingRef)} className="block w-full text-left">Book</button>
+            <button onClick={handleGetQuote} className="block w-full text-left">Admin Dashboard</button>
+          </nav>
+        )}
+      </header>
+
+      <main className="relative z-10">
+        {/* Hero Section */}
+        <section className="max-w-7xl mx-auto px-5 py-20 grid lg:grid-cols-2 gap-12 items-center" aria-labelledby="hero-heading">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 mb-6" role="status">
+              ✅ #1 Rated Cleaning Service in New Jersey
+            </div>
+            <h1 id="hero-heading" className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
+              New Jersey's Most Trusted <span className="text-cyan-400">Cleaning Professionals</span>
+            </h1>
+            <p className="mt-6 text-lg text-slate-300 max-w-xl">
+              Professional residential, commercial, deep cleaning, and post-construction cleanup serving all of New Jersey with fast quotes, easy booking, and reliable service teams.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Button 
+                onClick={() => scrollToSection(bookingRef)}
+                className="bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-2xl px-8 py-6 text-base"
+                aria-label="Book professional cleaning service in New Jersey"
+              >
+                Book Cleaning Now
+              </Button>
+              <Button 
+                onClick={() => scrollToSection(servicesRef)}
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white/10 rounded-2xl px-8 py-6 text-base"
+                aria-label="View our NJ cleaning services"
+              >
+                View Services
+              </Button>
+            </div>
+            <div className="mt-8 flex flex-wrap items-center gap-5 text-sm text-slate-300">
+              <span className="flex items-center gap-1">⭐ 4.9 Rating (287+ Reviews)</span>
+              <span>Licensed & Insured in NJ</span>
+              <span>Same-Week Availability</span>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.15 }}>
+            <article className="bg-white/10 border-white/10 rounded-[2rem] overflow-hidden shadow-2xl shadow-cyan-950/40" aria-label="Quick booking card">
+              <Card className="bg-white/10 border-white/10 rounded-[2rem]">
+                <CardContent className="p-4">
+                  <div className="rounded-[1.5rem] bg-gradient-to-br from-cyan-200 via-white to-blue-200 p-8 text-slate-950 min-h-[430px] flex flex-col justify-between">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wider text-slate-600">Instant Quote • New Jersey</p>
+                        <h2 className="text-3xl font-black mt-2">Schedule your next clean in NJ</h2>
+                      </div>
+                      <div className="text-4xl" aria-hidden="true">✨</div>
+                    </div>
+                    <div className="grid gap-4 mt-8">
+                      {[
+                        "Choose home or business cleaning in NJ",
+                        "Select one-time or recurring NJ service",
+                        "Receive confirmation and crew assignment",
+                      ].map((item) => (
+                        <div key={item} className="flex items-center gap-3 rounded-2xl bg-white/70 p-4 shadow-sm">
+                          <span className="text-cyan-700" aria-hidden="true">✅</span>
+                          <span className="font-semibold">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-8 rounded-3xl bg-slate-950 text-white p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-400">Next Available in NJ</p>
+                        <p className="font-bold text-xl">Tomorrow at 9:00 AM</p>
+                      </div>
+                      <div className="text-4xl" aria-hidden="true">📅</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </article>
+          </motion.div>
+        </section>
+
+        {/* Service Areas Banner */}
+        <section className="bg-cyan-900/30 border-y border-cyan-500/20 py-6" aria-label="Service areas in New Jersey">
+          <div className="max-w-7xl mx-auto px-5">
+            <p className="text-center text-sm text-cyan-200 mb-4">
+              <strong>🏆 Proudly Serving All of New Jersey Including:</strong>
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {serviceAreas.map((area) => (
+                <span key={area} className="bg-slate-800/50 px-3 py-1 rounded-full text-xs text-slate-300">
+                  {area}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Services Section */}
+        <section ref={servicesRef} className="max-w-7xl mx-auto px-5 py-16" aria-labelledby="services-heading">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10">
+            <div>
+              <p className="text-cyan-300 font-semibold">Our Services in New Jersey</p>
+              <h2 id="services-heading" className="text-4xl font-black mt-2">Professional Cleaning Services for Every NJ Need</h2>
+            </div>
+            <p className="text-slate-300 max-w-xl">
+              360 Cleaning Co. is New Jersey's premium cleaning service for homeowners, offices, restaurants, real estate agents, landlords, and contractors throughout the Garden State.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {services.map((service) => (
+              <Card key={service.title} className="bg-white/10 border-white/10 rounded-3xl hover:bg-white/[0.14] transition cursor-pointer" onClick={() => scrollToSection(bookingRef)}>
+                <CardContent className="p-6">
+                  <div className="h-12 w-12 rounded-2xl bg-cyan-400/20 flex items-center justify-center mb-5 text-2xl" aria-hidden="true">
+                    {service.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-white">{service.title}</h3>
+                  <p className="text-slate-300 mt-3 text-sm leading-relaxed">{service.desc}</p>
+                  <p className="text-cyan-400/60 mt-2 text-xs">{service.cityKeywords}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Why Choose Us Section */}
+        <section className="bg-slate-900/50 py-16" aria-labelledby="why-choose-heading">
+          <div className="max-w-7xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-cyan-300 font-semibold">Why 360 Cleaning Co. in New Jersey</p>
+              <h2 id="why-choose-heading" className="text-4xl font-black mt-2">The #1 Choice for NJ Cleaning Services</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-5xl mb-4">⭐</div>
+                <h3 className="text-xl font-bold text-white mb-2">4.9 Star Rating</h3>
+                <p className="text-slate-300">287+ satisfied customers across New Jersey</p>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl mb-4">🛡️</div>
+                <h3 className="text-xl font-bold text-white mb-2">Licensed & Insured</h3>
+                <p className="text-slate-300">Fully bonded in New Jersey for your peace of mind</p>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl mb-4">⚡</div>
+                <h3 className="text-xl font-bold text-white mb-2">Same-Week Service</h3>
+                <p className="text-slate-300">Fast booking available throughout NJ</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section ref={packagesRef} className="max-w-7xl mx-auto px-5 py-16" aria-labelledby="pricing-heading">
+          <div className="text-center mb-10">
+            <p className="text-cyan-300 font-semibold">Affordable NJ Pricing</p>
+            <h2 id="pricing-heading" className="text-4xl font-black mt-2">Simple, Transparent Pricing for New Jersey</h2>
+          </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            {packages.map((pkg) => (
+              <Card key={pkg.name} className={`rounded-3xl border ${pkg.featured ? "bg-cyan-400 text-slate-950 border-cyan-300 scale-[1.02]" : "bg-white/10 text-white border-white/10"}`}>
+                <CardContent className="p-8">
+                  {pkg.featured && <span className="inline-block rounded-full bg-slate-950 text-white px-3 py-1 text-xs font-bold mb-4">Most Popular in NJ</span>}
+                  <h3 className="text-2xl font-black">{pkg.name}</h3>
+                  <p className="text-4xl font-black mt-4">{pkg.price}</p>
+                  <div className="mt-6 space-y-3">
+                    {pkg.details.map((detail) => (
+                      <p key={detail} className="flex items-center gap-3 text-sm">✅ {detail}</p>
+                    ))}
+                  </div>
+                  <Button 
+                    onClick={() => scrollToSection(bookingRef)}
+                    className={`w-full mt-8 rounded-2xl ${pkg.featured ? "bg-slate-950 text-white hover:bg-slate-800" : "bg-white text-slate-950 hover:bg-slate-200"}`}
+                    aria-label={`Request quote for ${pkg.name} in New Jersey`}
+                  >
+                    Request Quote
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="bg-cyan-900/20 py-16" aria-labelledby="testimonials-heading">
+          <div className="max-w-7xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-cyan-300 font-semibold">What NJ Customers Say</p>
+              <h2 id="testimonials-heading" className="text-4xl font-black mt-2">Trusted by 287+ New Jersey Families & Businesses</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="bg-white/10 border-white/10 rounded-3xl p-6">
+                <div className="text-yellow-400 text-xl mb-2">⭐⭐⭐⭐⭐</div>
+                <p className="text-slate-300 italic">"Best cleaning service in New Jersey! They cleaned our entire office in Jersey City and did an amazing job. Highly recommend!"</p>
+                <p className="text-cyan-400 mt-3 font-semibold">— Sarah M., Jersey City NJ</p>
+              </Card>
+              <Card className="bg-white/10 border-white/10 rounded-3xl p-6">
+                <div className="text-yellow-400 text-xl mb-2">⭐⭐⭐⭐⭐</div>
+                <p className="text-slate-300 italic">"Professional, punctual, and thorough. Our deep cleaning in Newark was perfect. Will definitely book again for our NJ home."</p>
+                <p className="text-cyan-400 mt-3 font-semibold">— Michael R., Newark NJ</p>
+              </Card>
+              <Card className="bg-white/10 border-white/10 rounded-3xl p-6">
+                <div className="text-yellow-400 text-xl mb-2">⭐⭐⭐⭐⭐</div>
+                <p className="text-slate-300 italic">"After our Hoboken apartment renovation, 360 Cleaning Co. made it spotless. Best post-construction cleaners in NJ!"</p>
+                <p className="text-cyan-400 mt-3 font-semibold">— Jennifer L., Hoboken NJ</p>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Booking Section */}
+        <section ref={bookingRef} className="max-w-7xl mx-auto px-5 py-16 grid lg:grid-cols-2 gap-8 items-start" aria-labelledby="booking-heading">
+          <div>
+            <p className="text-cyan-300 font-semibold">Book Your NJ Cleaning</p>
+            <h2 id="booking-heading" className="text-4xl font-black mt-2">Request a Free Estimate in New Jersey</h2>
+            <p className="text-slate-300 mt-4">Get your personalized cleaning quote for your New Jersey home or business. Our NJ team responds quickly with competitive pricing.</p>
+            <div className="mt-8 space-y-4 text-slate-300">
+              <p className="flex items-center gap-3">
+                <span className="text-2xl" aria-hidden="true">📞</span>
+                <a href="tel:+15551234567" className="hover:text-cyan-300">(555) 123-4567</a>
+              </p>
+              <p className="flex items-center gap-3">
+                <span className="text-2xl" aria-hidden="true">✉️</span>
+                <a href="mailto:info@360cleaningco.com" className="hover:text-cyan-300">info@360cleaningco.com</a>
+              </p>
+              <p className="flex items-center gap-3">
+                <span className="text-2xl" aria-hidden="true">📍</span>
+                <span>Serving <strong className="text-cyan-300">All of New Jersey</strong> including Jersey City, Newark, Hoboken, and surrounding areas</span>
+              </p>
+            </div>
+          </div>
+
+          <BookingForm />
+        </section>
+
+        {/* Footer */}
+        <footer className="border-t border-white/10 mt-16" role="contentinfo">
+          <div className="max-w-7xl mx-auto px-5 py-8 flex flex-col md:flex-row justify-between gap-4 text-sm text-slate-400">
+            <div>
+              <p className="font-bold text-white">360 Cleaning Co.</p>
+              <p>Professional Cleaning Services in New Jersey</p>
+              <p>© 2026 360 Cleaning Co. All rights reserved.</p>
+            </div>
+            <div className="flex flex-col md:text-right gap-2">
+              <p>Privacy Policy • Terms of Service • Careers</p>
+              <p>Serving: Jersey City, Newark, Hoboken, New Brunswick, Trenton & All NJ</p>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+};
+
+export default Home;
