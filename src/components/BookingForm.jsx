@@ -101,7 +101,6 @@ const BookingForm = ({ onSuccess }) => {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     // Update lead with full details
-    const { updateLeadStatus } = require('@/services/api');
     const fullNotes = `
 Contact: ${step1Data.name} | ${step1Data.phone} | ${step1Data.email}
 Service: ${step2Data.serviceType}
@@ -144,16 +143,16 @@ Special Requests: ${step2Data.specialRequests || 'None'}
   // Show success screen
   if (showSuccess) {
     return (
-      <Card className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30 rounded-3xl">
+      <Card className="bg-gradient-to-br from-green-100 to-emerald-100 border-green-300 rounded-3xl">
         <CardContent className="p-8 text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Quote Request Received!</h3>
-          <p className="text-slate-300 mb-4">
-            Thanks {step1Data.name}! We've received your request and will contact you at <span className="text-cyan-400">{step1Data.phone}</span> within 2 hours with your custom quote.
+          <h3 className="text-2xl font-bold text-slate-800 mb-2">Quote Request Received!</h3>
+          <p className="text-slate-600 text-lg mb-4">
+            Thanks {step1Data.name}! We've received your request and will contact you at <span className="text-cyan-600 font-semibold">{step1Data.phone}</span> within 2 hours with your custom quote.
           </p>
-          <div className="bg-slate-900/50 rounded-xl p-4 text-left">
-            <p className="text-sm text-slate-400 mb-2">What happens next:</p>
-            <ul className="text-sm text-slate-300 space-y-1">
+          <div className="bg-white/70 rounded-xl p-4 text-left border border-green-200">
+            <p className="text-sm text-slate-500 mb-2 font-medium">What happens next:</p>
+            <ul className="text-sm text-slate-700 space-y-2">
               <li>✅ We'll review your {step2Data.serviceType} request</li>
               <li>✅ You'll receive a personalized quote via text/email</li>
               <li>✅ We can schedule as early as tomorrow</li>
@@ -164,58 +163,61 @@ Special Requests: ${step2Data.specialRequests || 'None'}
     );
   }
 
-  // Step 1: Quick Contact Form
+  // Step 1: Quick Contact Form (Light Theme, Large Text)
   if (!contactSubmitted) {
     return (
-      <Card className="bg-white/10 border-white/10 rounded-3xl">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-cyan-400 text-slate-950 w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+      <Card className="bg-slate-50 border-slate-200 rounded-3xl shadow-lg">
+        <CardContent className="p-8">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="bg-cyan-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">1</div>
             <div>
-              <h3 className="font-bold text-white">Quick Contact Info</h3>
-              <p className="text-xs text-slate-400">We'll reach out with your quote</p>
+              <h3 className="font-bold text-xl text-slate-800">Step 1: Your Contact Info</h3>
+              <p className="text-base text-slate-500">So we can reach you with your quote</p>
             </div>
           </div>
           
-          <form onSubmit={handleStep1Submit} className="space-y-4">
+          <form onSubmit={handleStep1Submit} className="space-y-6">
             <div>
+              <label className="block text-lg font-semibold text-slate-700 mb-2">Full Name *</label>
               <input
                 value={step1Data.name}
                 onChange={(e) => setStep1Data({...step1Data, name: e.target.value})}
-                className={`w-full rounded-2xl bg-slate-900 border ${step1Errors.name ? 'border-red-500' : 'border-white/10'} px-4 py-3 outline-none focus:border-cyan-300 transition`}
-                placeholder="Your Full Name"
+                className={`w-full rounded-2xl bg-white border-2 ${step1Errors.name ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                placeholder="Enter your full name"
               />
-              {step1Errors.name && <p className="text-red-400 text-xs mt-1">{step1Errors.name}</p>}
+              {step1Errors.name && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.name}</p>}
             </div>
             
             <div>
+              <label className="block text-lg font-semibold text-slate-700 mb-2">Phone Number *</label>
               <input
                 value={step1Data.phone}
                 onChange={(e) => setStep1Data({...step1Data, phone: e.target.value})}
-                className={`w-full rounded-2xl bg-slate-900 border ${step1Errors.phone ? 'border-red-500' : 'border-white/10'} px-4 py-3 outline-none focus:border-cyan-300 transition`}
-                placeholder="Phone Number"
+                className={`w-full rounded-2xl bg-white border-2 ${step1Errors.phone ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                placeholder="(555) 123-4567"
                 type="tel"
               />
-              {step1Errors.phone && <p className="text-red-400 text-xs mt-1">{step1Errors.phone}</p>}
+              {step1Errors.phone && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.phone}</p>}
             </div>
             
             <div>
+              <label className="block text-lg font-semibold text-slate-700 mb-2">Email Address *</label>
               <input
                 value={step1Data.email}
                 onChange={(e) => setStep1Data({...step1Data, email: e.target.value})}
-                className={`w-full rounded-2xl bg-slate-900 border ${step1Errors.email ? 'border-red-500' : 'border-white/10'} px-4 py-3 outline-none focus:border-cyan-300 transition`}
-                placeholder="Email Address"
+                className={`w-full rounded-2xl bg-white border-2 ${step1Errors.email ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                placeholder="you@example.com"
                 type="email"
               />
-              {step1Errors.email && <p className="text-red-400 text-xs mt-1">{step1Errors.email}</p>}
+              {step1Errors.email && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.email}</p>}
             </div>
             
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-2xl py-4 text-base"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl py-5 text-xl font-bold shadow-lg"
             >
-              {isSubmitting ? 'Submitting...' : 'Continue →'}
+              {isSubmitting ? 'Submitting...' : 'Continue to Step 2 →'}
             </Button>
           </form>
         </CardContent>
@@ -223,47 +225,48 @@ Special Requests: ${step2Data.specialRequests || 'None'}
     );
   }
 
-  // Step 2: Property Details
+  // Step 2: Property Details (Light Theme, Large Text)
   return (
-    <Card className="bg-white/10 border-white/10 rounded-3xl">
-      <CardContent className="p-6 space-y-6">
+    <Card className="bg-slate-50 border-slate-200 rounded-3xl shadow-lg">
+      <CardContent className="p-8 space-y-8">
         {/* Progress Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">✓</div>
+            <div className="bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">✓</div>
             <div>
-              <p className="text-sm text-green-400">Contact Received!</p>
-              <p className="text-xs text-slate-400">{step1Data.name} • {step1Data.phone}</p>
+              <p className="text-base text-green-600 font-semibold">Step 1 Complete!</p>
+              <p className="text-sm text-slate-500">{step1Data.name} • {step1Data.phone}</p>
             </div>
           </div>
+          <div className="h-8 w-px bg-slate-300 mx-2"></div>
           <div className="flex items-center gap-3">
-            <div className="bg-cyan-400 text-slate-950 w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+            <div className="bg-cyan-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">2</div>
             <div>
-              <p className="font-bold text-white">Property Details</p>
-              <p className="text-xs text-slate-400">Tell us about your space</p>
+              <p className="font-bold text-lg text-slate-800">Property Details</p>
+              <p className="text-sm text-slate-500">Tell us about your space</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleStep2Submit} className="space-y-6">
+        <form onSubmit={handleStep2Submit} className="space-y-8">
           {/* Service Type Selection */}
           <div>
-            <label className="block text-sm font-semibold text-slate-200 mb-3">What type of cleaning do you need?</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <label className="block text-xl font-bold text-slate-800 mb-4">What type of cleaning do you need?</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {serviceTypes.map((service) => (
                 <button
                   key={service.id}
                   type="button"
                   onClick={() => handleServiceSelect(service)}
-                  className={`p-4 rounded-2xl border transition ${
+                  className={`p-5 rounded-2xl border-2 transition ${
                     selectedService?.id === service.id 
-                      ? 'bg-cyan-400/20 border-cyan-400 text-white' 
-                      : 'bg-slate-900/50 border-white/10 text-slate-300 hover:border-white/30'
+                      ? 'bg-cyan-100 border-cyan-500 text-slate-800' 
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-cyan-300'
                   }`}
                 >
-                  <span className="text-2xl block mb-1">{service.icon}</span>
-                  <span className="text-sm font-semibold block">{service.name}</span>
-                  <span className="text-xs opacity-70 block">{service.desc}</span>
+                  <span className="text-3xl block mb-2">{service.icon}</span>
+                  <span className="text-base font-semibold block">{service.name}</span>
+                  <span className="text-sm text-slate-500 block mt-1">{service.desc}</span>
                 </button>
               ))}
             </div>
@@ -272,21 +275,21 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           {/* Property Size */}
           {selectedService && (
             <div>
-              <label className="block text-sm font-semibold text-slate-200 mb-3">Property Size</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <label className="block text-xl font-bold text-slate-800 mb-4">Property Size</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {getRelevantSizes().map((size) => (
                   <button
                     key={size.id}
                     type="button"
                     onClick={() => setStep2Data({...step2Data, propertySize: size.label})}
-                    className={`p-3 rounded-xl border transition text-left ${
+                    className={`p-4 rounded-xl border-2 transition text-left ${
                       step2Data.propertySize === size.label 
-                        ? 'bg-cyan-400/20 border-cyan-400' 
-                        : 'bg-slate-900/50 border-white/10 hover:border-white/30'
+                        ? 'bg-cyan-100 border-cyan-500' 
+                        : 'bg-white border-slate-200 hover:border-cyan-300'
                     }`}
                   >
-                    <span className="text-sm font-semibold block">{size.label}</span>
-                    <span className="text-xs text-slate-400">{size.sqft}</span>
+                    <span className="text-base font-semibold block text-slate-800">{size.label}</span>
+                    <span className="text-sm text-slate-500">{size.sqft}</span>
                   </button>
                 ))}
               </div>
@@ -294,13 +297,13 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           )}
 
           {/* Bathrooms & Frequency */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-200 mb-2">Number of Bathrooms</label>
+              <label className="block text-lg font-semibold text-slate-700 mb-3">Number of Bathrooms</label>
               <select
                 value={step2Data.bathrooms}
                 onChange={(e) => setStep2Data({...step2Data, bathrooms: e.target.value})}
-                className="w-full rounded-2xl bg-slate-900 border border-white/10 px-4 py-3 outline-none focus:border-cyan-300"
+                className="w-full rounded-2xl bg-white border-2 border-slate-300 px-5 py-4 text-lg outline-none focus:border-cyan-400"
               >
                 <option value="">Select...</option>
                 <option value="1">1 Bathroom</option>
@@ -312,11 +315,11 @@ Special Requests: ${step2Data.specialRequests || 'None'}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-200 mb-2">How Often?</label>
+              <label className="block text-lg font-semibold text-slate-700 mb-3">How Often?</label>
               <select
                 value={step2Data.frequency}
                 onChange={(e) => setStep2Data({...step2Data, frequency: e.target.value})}
-                className="w-full rounded-2xl bg-slate-900 border border-white/10 px-4 py-3 outline-none focus:border-cyan-300"
+                className="w-full rounded-2xl bg-white border-2 border-slate-300 px-5 py-4 text-lg outline-none focus:border-cyan-400"
               >
                 <option value="">Select...</option>
                 <option value="One-time">One-time Clean</option>
@@ -329,11 +332,11 @@ Special Requests: ${step2Data.specialRequests || 'None'}
 
           {/* Special Requests */}
           <div>
-            <label className="block text-sm font-semibold text-slate-200 mb-2">Special Requests or Notes</label>
+            <label className="block text-lg font-semibold text-slate-700 mb-3">Special Requests or Notes (Optional)</label>
             <textarea
               value={step2Data.specialRequests}
               onChange={(e) => setStep2Data({...step2Data, specialRequests: e.target.value})}
-              className="w-full rounded-2xl bg-slate-900 border border-white/10 px-4 py-3 outline-none focus:border-cyan-300 min-h-24"
+              className="w-full rounded-2xl bg-white border-2 border-slate-300 px-5 py-4 text-lg outline-none focus:border-cyan-400 min-h-28"
               placeholder="Pets, specific areas to focus on, access instructions, preferred time, etc."
             />
           </div>
@@ -341,12 +344,12 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-2xl py-4 text-base"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl py-5 text-xl font-bold shadow-lg"
           >
-            {isSubmitting ? 'Submitting...' : 'Get My Free Quote 💰'}
+            {isSubmitting ? 'Submitting...' : '💰 Get My Free Quote!'}
           </Button>
           
-          <p className="text-center text-xs text-slate-400">
+          <p className="text-center text-base text-slate-500">
             Your quote will be ready within 2 hours. No commitment required.
           </p>
         </form>
