@@ -8,6 +8,10 @@ import LeadsList from '@/components/LeadsList';
 import JobsManager from '@/components/JobsManager';
 import CustomerProfile from '@/components/CustomerProfile';
 import MarketingCenter from '@/components/MarketingCenter';
+import CrewManagement from '@/components/CrewManagement';
+import Invoices from '@/components/Invoices';
+import RecurringClients from '@/components/RecurringClients';
+import Reports from '@/components/Reports';
 
 const adminModules = [
   { icon: "📋", label: "Lead & Quote CRM", color: "from-cyan-400/20 to-cyan-600/20", tab: 'leads' },
@@ -47,6 +51,10 @@ const AdminDashboard = () => {
     { id: 'leads', label: 'Leads', icon: '👥', badge: stats.newLeads > 0 ? stats.newLeads : null },
     { id: 'jobs', label: 'Jobs', icon: '📅', badge: jobs.length > 0 ? jobs.length : null },
     { id: 'customers', label: 'Customers', icon: '⭐' },
+    { id: 'recurring', label: 'Recurring', icon: '🔄' },
+    { id: 'crew', label: 'Crew', icon: '👥' },
+    { id: 'invoices', label: 'Invoices', icon: '💵' },
+    { id: 'reports', label: 'Reports', icon: '📊' },
     { id: 'marketing', label: 'Marketing', icon: '📣' },
   ];
 
@@ -379,32 +387,32 @@ const AdminDashboard = () => {
                     <span className="text-xs font-medium text-center">Job Scheduling</span>
                   </button>
                   <button
-                    onClick={() => alert('Crew Management coming soon!')}
+                    onClick={() => setActiveTab('crew')}
                     className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-purple-400/20 to-purple-600/20 border border-white/10 p-4 hover:scale-105 transition"
                   >
                     <span className="text-2xl">👥</span>
                     <span className="text-xs font-medium text-center">Crew Management</span>
                   </button>
                   <button
-                    onClick={() => alert('Invoices & Payments coming soon!')}
+                    onClick={() => setActiveTab('invoices')}
                     className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-green-400/20 to-green-600/20 border border-white/10 p-4 hover:scale-105 transition"
                   >
                     <span className="text-2xl">💵</span>
                     <span className="text-xs font-medium text-center">Invoices & Payments</span>
                   </button>
                   <button
-                    onClick={() => alert('Reports & Analytics coming soon!')}
+                    onClick={() => setActiveTab('reports')}
                     className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-white/10 p-4 hover:scale-105 transition"
                   >
                     <span className="text-2xl">📊</span>
                     <span className="text-xs font-medium text-center">Reports & Analytics</span>
                   </button>
                   <button
-                    onClick={() => alert('Settings coming soon!')}
+                    onClick={() => setActiveTab('recurring')}
                     className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-red-400/20 to-red-600/20 border border-white/10 p-4 hover:scale-105 transition"
                   >
-                    <span className="text-2xl">⚙️</span>
-                    <span className="text-xs font-medium text-center">Settings</span>
+                    <span className="text-2xl">🔄</span>
+                    <span className="text-xs font-medium text-center">Recurring Clients</span>
                   </button>
                 </div>
               </CardContent>
@@ -494,6 +502,66 @@ const AdminDashboard = () => {
             transition={{ duration: 0.3 }}
           >
             <MarketingCenter theme={theme} />
+          </motion.div>
+        )}
+
+        {/* Recurring Tab */}
+        {activeTab === 'recurring' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+              <CardContent className="p-4 md:p-6">
+                <RecurringClients theme={theme} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Crew Tab */}
+        {activeTab === 'crew' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+              <CardContent className="p-4 md:p-6">
+                <CrewManagement theme={theme} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Invoices Tab */}
+        {activeTab === 'invoices' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+              <CardContent className="p-4 md:p-6">
+                <Invoices theme={theme} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+              <CardContent className="p-4 md:p-6">
+                <Reports theme={theme} />
+              </CardContent>
+            </Card>
           </motion.div>
         )}
       </main>
