@@ -364,19 +364,48 @@ const AdminDashboard = () => {
               <CardContent className="p-4 md:p-6">
                 <h2 className="text-lg font-bold mb-4">Quick Access</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {adminModules.map((module) => (
-                    <button
-                      key={module.label}
-                      onClick={() => {
-                        if (module.tab === 'leads') setActiveTab('leads');
-                        else if (module.tab === 'jobs') setActiveTab('jobs');
-                      }}
-                      className={`flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br ${module.color} border border-white/10 p-4 hover:scale-105 transition`}
-                    >
-                      <span className="text-2xl">{module.icon}</span>
-                      <span className="text-xs font-medium text-center">{module.label}</span>
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setActiveTab('leads')}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-cyan-600/20 border border-white/10 p-4 hover:scale-105 transition"
+                  >
+                    <span className="text-2xl">📋</span>
+                    <span className="text-xs font-medium text-center">Lead & Quote CRM</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('jobs')}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-400/20 to-blue-600/20 border border-white/10 p-4 hover:scale-105 transition"
+                  >
+                    <span className="text-2xl">📅</span>
+                    <span className="text-xs font-medium text-center">Job Scheduling</span>
+                  </button>
+                  <button
+                    onClick={() => alert('Crew Management coming soon!')}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-purple-400/20 to-purple-600/20 border border-white/10 p-4 hover:scale-105 transition"
+                  >
+                    <span className="text-2xl">👥</span>
+                    <span className="text-xs font-medium text-center">Crew Management</span>
+                  </button>
+                  <button
+                    onClick={() => alert('Invoices & Payments coming soon!')}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-green-400/20 to-green-600/20 border border-white/10 p-4 hover:scale-105 transition"
+                  >
+                    <span className="text-2xl">💵</span>
+                    <span className="text-xs font-medium text-center">Invoices & Payments</span>
+                  </button>
+                  <button
+                    onClick={() => alert('Reports & Analytics coming soon!')}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-white/10 p-4 hover:scale-105 transition"
+                  >
+                    <span className="text-2xl">📊</span>
+                    <span className="text-xs font-medium text-center">Reports & Analytics</span>
+                  </button>
+                  <button
+                    onClick={() => alert('Settings coming soon!')}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-red-400/20 to-red-600/20 border border-white/10 p-4 hover:scale-105 transition"
+                  >
+                    <span className="text-2xl">⚙️</span>
+                    <span className="text-xs font-medium text-center">Settings</span>
+                  </button>
                 </div>
               </CardContent>
             </Card>
