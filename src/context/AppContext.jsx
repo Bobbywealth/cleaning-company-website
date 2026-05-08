@@ -29,6 +29,39 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [leads, setLeads] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [crewMembers, setCrewMembers] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('crewMembers');
+      return saved ? JSON.parse(saved) : [
+        { id: 1, name: 'Mike Johnson', role: 'Lead Cleaner', phone: '(862) 555-0101', email: 'mike@360cleaning.com', status: 'available', jobsToday: 2, avatar: 'M' },
+        { id: 2, name: 'Sarah Davis', role: 'Cleaner', phone: '(862) 555-0102', email: 'sarah@360cleaning.com', status: 'available', jobsToday: 1, avatar: 'S' },
+        { id: 3, name: 'James Wilson', role: 'Cleaner', phone: '(862) 555-0103', email: 'james@360cleaning.com', status: 'busy', jobsToday: 3, avatar: 'J' },
+        { id: 4, name: 'Emily Brown', role: 'Lead Cleaner', phone: '(862) 555-0104', email: 'emily@360cleaning.com', status: 'available', jobsToday: 2, avatar: 'E' },
+      ];
+    }
+    return [];
+  });
+  const [invoices, setInvoices] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('invoices');
+      return saved ? JSON.parse(saved) : [
+        { id: 'INV-001', client: 'John Smith', email: 'john@email.com', amount: 250, status: 'paid', date: '2026-05-01', dueDate: '2026-05-15' },
+        { id: 'INV-002', client: 'Sarah Johnson', email: 'sarah@email.com', amount: 180, status: 'pending', date: '2026-05-03', dueDate: '2026-05-17' },
+        { id: 'INV-003', client: 'Mike Davis', email: 'mike@email.com', amount: 320, status: 'overdue', date: '2026-04-25', dueDate: '2026-05-09' },
+      ];
+    }
+    return [];
+  });
+  const [recurringClients, setRecurringClients] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('recurringClients');
+      return saved ? JSON.parse(saved) : [
+        { id: 1, name: 'John Smith', phone: '(862) 555-1001', email: 'john@email.com', plan: 'premium', frequency: 'weekly', price: 180, nextDate: '2026-05-15', status: 'active' },
+        { id: 2, name: 'Sarah Johnson', phone: '(862) 555-1002', email: 'sarah@email.com', plan: 'standard', frequency: 'biweekly', price: 150, nextDate: '2026-05-18', status: 'active' },
+      ];
+    }
+    return [];
+  });
   const [stats, setStats] = useState({ newLeads: 0, bookedJobs: 0, totalJobs: 0, completedJobs: 0 });
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
@@ -47,12 +80,15 @@ export const AppProvider = ({ children }) => {
     refreshData();
   }, []);
 
-  // Save theme to localStorage
+  // Save data to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('dashboardTheme', theme);
+      localStorage.setItem('crewMembers', JSON.stringify(crewMembers));
+      localStorage.setItem('invoices', JSON.stringify(invoices));
+      localStorage.setItem('recurringClients', JSON.stringify(recurringClients));
     }
-  }, [theme]);
+  }, [theme, crewMembers, invoices, recurringClients]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -135,11 +171,87 @@ export const AppProvider = ({ children }) => {
     showNotification('Job deleted');
   };
 
+  // Crew functions
+  const addCrewMember = (member) => {
+    const newId = Math.max(...crewMembers.map(m => m.id), 0) + 1;
+    setCrewMembers([...crewMembers, { ...member, id: newId }]);
+    showNotification('Team member added!');
+  };
+
+  const updateCrewMember = (id, updates) => {
+    setCrewMembers(crewMembers.map(m => m.id === id ? { ...m, ...updates } : m));
+  };
+
+  const removeCrewMember = (id) => {
+    setCrewMembers(crewMembers.filter(m => m.id !== id));
+    showNotification('Team member removed');
+  };
+
+  // Invoice functions
+  const addInvoice = (invoice) => {
+    const invoiceId = `INV-${String(invoices.length + 1).padStart(3, '0')}`;
+    const today = new Date();
+    const dueDate = new Date(today);
+    dueDate.setDate(dueDate.getDate() + 14);
+    setInvoices([...invoices, {
+      ...invoice,
+      id: invoiceId,
+      date: today.toISOString().split('T')[0],
+      dueDate: dueDate.toISOString().split('T')[0],
+      status: 'pending'
+    }]);
+    showNotification('Invoice created!');
+  };
+
+  const updateInvoiceStatus = (id, status) => {
+    setInvoices(invoices.map(inv => inv.id === id ? { ...inv, status } : inv));
+    showNotification(`Invoice marked as ${status}`);
+  };
+
+  const removeInvoice = (id) => {
+    setInvoices(invoices.filter(inv => inv.id !== id));
+    showNotification('Invoice deleted');
+  };
+
+  // Recurring client functions
+  const addRecurringClient = (client) => {
+    const today = new Date();
+    let nextDate = new Date(today);
+    if (client.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+    else if (client.frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
+    else nextDate.setMonth(nextDate.getMonth() + 1);
+    setRecurringClients([...recurringClients, {
+      ...client,
+      id: Date.now(),
+      nextDate: nextDate.toISOString().split('T')[0],
+      status: 'active'
+    }]);
+    showNotification('Recurring client added!');
+  };
+
+  const updateRecurringClient = (id, updates) => {
+    setRecurringClients(recurringClients.map(c => c.id === id ? { ...c, ...updates } : c));
+  };
+
+  const removeRecurringClient = (id) => {
+    setRecurringClients(recurringClients.filter(c => c.id !== id));
+    showNotification('Recurring client removed');
+  };
+
+  const toggleRecurringPause = (id) => {
+    setRecurringClients(recurringClients.map(c => 
+      c.id === id ? { ...c, status: c.status === 'active' ? 'paused' : 'active' } : c
+    ));
+  };
+
   const value = {
     user,
     isAuthenticated: !!user?.isAuthenticated,
     leads,
     jobs,
+    crewMembers,
+    invoices,
+    recurringClients,
     stats,
     loading,
     notification,
@@ -154,7 +266,20 @@ export const AppProvider = ({ children }) => {
     createJob,
     updateJobStatus,
     removeJob,
-    refreshData
+    refreshData,
+    // Crew
+    addCrewMember,
+    updateCrewMember,
+    removeCrewMember,
+    // Invoices
+    addInvoice,
+    updateInvoiceStatus,
+    removeInvoice,
+    // Recurring
+    addRecurringClient,
+    updateRecurringClient,
+    removeRecurringClient,
+    toggleRecurringPause
   };
 
   return (

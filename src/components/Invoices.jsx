@@ -4,14 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 
 const Invoices = ({ theme = 'dark' }) => {
-  const { leads, jobs } = useApp();
-  const [invoices, setInvoices] = useState([
-    { id: 'INV-001', client: 'John Smith', email: 'john@email.com', amount: 250, status: 'paid', date: '2026-05-01', dueDate: '2026-05-15' },
-    { id: 'INV-002', client: 'Sarah Johnson', email: 'sarah@email.com', amount: 180, status: 'pending', date: '2026-05-03', dueDate: '2026-05-17' },
-    { id: 'INV-003', client: 'Mike Davis', email: 'mike@email.com', amount: 320, status: 'overdue', date: '2026-04-25', dueDate: '2026-05-09' },
-    { id: 'INV-004', client: 'Emily Wilson', email: 'emily@email.com', amount: 150, status: 'paid', date: '2026-05-05', dueDate: '2026-05-19' },
-    { id: 'INV-005', client: 'Chris Brown', email: 'chris@email.com', amount: 420, status: 'pending', date: '2026-05-07', dueDate: '2026-05-21' },
-  ]);
+  const { invoices, addInvoice, updateInvoiceStatus, removeInvoice } = useApp();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newInvoice, setNewInvoice] = useState({ client: '', email: '', amount: '', service: '' });
 
@@ -35,33 +28,19 @@ const Invoices = ({ theme = 'dark' }) => {
 
   const handleCreateInvoice = (e) => {
     e.preventDefault();
-    const invoiceId = `INV-${String(invoices.length + 1).padStart(3, '0')}`;
-    const today = new Date();
-    const dueDate = new Date(today);
-    dueDate.setDate(dueDate.getDate() + 14);
-
-    setInvoices([...invoices, {
-      id: invoiceId,
+    addInvoice({
       client: newInvoice.client,
       email: newInvoice.email,
       amount: parseFloat(newInvoice.amount),
-      status: 'pending',
-      date: today.toISOString().split('T')[0],
-      dueDate: dueDate.toISOString().split('T')[0]
-    }]);
+      service: newInvoice.service
+    });
     setNewInvoice({ client: '', email: '', amount: '', service: '' });
     setShowCreateForm(false);
   };
 
-  const markAsPaid = (id) => {
-    setInvoices(invoices.map(inv => 
-      inv.id === id ? { ...inv, status: 'paid' } : inv
-    ));
-  };
-
   const deleteInvoice = (id) => {
     if (confirm('Delete this invoice?')) {
-      setInvoices(invoices.filter(inv => inv.id !== id));
+      removeInvoice(id);
     }
   };
 
@@ -202,7 +181,7 @@ const Invoices = ({ theme = 'dark' }) => {
                       <div className="flex gap-2">
                         {invoice.status !== 'paid' && (
                           <Button 
-                            onClick={() => markAsPaid(invoice.id)}
+                            onClick={() => updateInvoiceStatus(invoice.id, 'paid')}
                             className="bg-green-400/20 text-green-400 hover:bg-green-400/30 rounded-lg text-sm"
                           >
                             ✅ Paid

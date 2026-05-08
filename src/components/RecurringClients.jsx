@@ -4,13 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 
 const RecurringClients = ({ theme = 'dark' }) => {
-  const { leads, jobs, createJob } = useApp();
-  const [recurringClients, setRecurringClients] = useState([
-    { id: 1, name: 'John Smith', phone: '(862) 555-1001', email: 'john@email.com', plan: 'premium', frequency: 'weekly', price: 180, nextDate: '2026-05-15', status: 'active' },
-    { id: 2, name: 'Sarah Johnson', phone: '(862) 555-1002', email: 'sarah@email.com', plan: 'standard', frequency: 'biweekly', price: 150, nextDate: '2026-05-18', status: 'active' },
-    { id: 3, name: 'Mike Davis', phone: '(862) 555-1003', email: 'mike@email.com', plan: 'basic', frequency: 'monthly', price: 200, nextDate: '2026-06-01', status: 'active' },
-    { id: 4, name: 'Emily Wilson', phone: '(862) 555-1004', email: 'emily@email.com', plan: 'premium', frequency: 'weekly', price: 180, nextDate: '2026-05-20', status: 'paused' },
-  ]);
+  const { recurringClients, addRecurringClient, updateRecurringClient, removeRecurringClient, toggleRecurringPause, createJob } = useApp();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newClient, setNewClient] = useState({ name: '', phone: '', email: '', plan: 'standard', frequency: 'biweekly', price: '' });
 
@@ -34,28 +28,16 @@ const RecurringClients = ({ theme = 'dark' }) => {
 
   const handleAddClient = (e) => {
     e.preventDefault();
-    const today = new Date();
-    let nextDate = new Date(today);
-    
-    if (newClient.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
-    else if (newClient.frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
-    else nextDate.setMonth(nextDate.getMonth() + 1);
-
-    setRecurringClients([...recurringClients, {
-      id: Date.now(),
-      ...newClient,
-      price: parseFloat(newClient.price),
-      nextDate: nextDate.toISOString().split('T')[0],
-      status: 'active'
-    }]);
+    addRecurringClient({
+      name: newClient.name,
+      phone: newClient.phone,
+      email: newClient.email,
+      plan: newClient.plan,
+      frequency: newClient.frequency,
+      price: parseFloat(newClient.price)
+    });
     setNewClient({ name: '', phone: '', email: '', plan: 'standard', frequency: 'biweekly', price: '' });
     setShowAddForm(false);
-  };
-
-  const togglePause = (id) => {
-    setRecurringClients(recurringClients.map(client => 
-      client.id === id ? { ...client, status: client.status === 'active' ? 'paused' : 'active' } : client
-    ));
   };
 
   const scheduleJob = (client) => {
@@ -68,7 +50,6 @@ const RecurringClients = ({ theme = 'dark' }) => {
       recurring: true
     };
     createJob(jobData);
-    alert(`Job scheduled for ${client.name} on ${client.nextDate}!`);
   };
 
   const activeClients = recurringClients.filter(c => c.status === 'active').length;
@@ -238,7 +219,7 @@ const RecurringClients = ({ theme = 'dark' }) => {
 
                 <div className="flex gap-2">
                   <Button 
-                    onClick={() => togglePause(client.id)}
+                    onClick={() => toggleRecurringPause(client.id)}
                     className={`flex-1 rounded-lg text-sm ${
                       client.status === 'active'
                         ? 'bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30'
@@ -257,6 +238,11 @@ const RecurringClients = ({ theme = 'dark' }) => {
               </div>
             ))}
           </div>
+          {recurringClients.length === 0 && (
+            <p className={`text-center py-8 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              No recurring clients yet. Add your first one!
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

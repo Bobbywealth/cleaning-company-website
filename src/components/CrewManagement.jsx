@@ -4,13 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 
 const CrewManagement = ({ theme = 'dark' }) => {
-  const { jobs } = useApp();
-  const [crewMembers, setCrewMembers] = useState([
-    { id: 1, name: 'Mike Johnson', role: 'Lead Cleaner', phone: '(862) 555-0101', email: 'mike@360cleaning.com', status: 'available', jobsToday: 2, avatar: 'M' },
-    { id: 2, name: 'Sarah Davis', role: 'Cleaner', phone: '(862) 555-0102', email: 'sarah@360cleaning.com', status: 'available', jobsToday: 1, avatar: 'S' },
-    { id: 3, name: 'James Wilson', role: 'Cleaner', phone: '(862) 555-0103', email: 'james@360cleaning.com', status: 'busy', jobsToday: 3, avatar: 'J' },
-    { id: 4, name: 'Emily Brown', role: 'Lead Cleaner', phone: '(862) 555-0104', email: 'emily@360cleaning.com', status: 'available', jobsToday: 2, avatar: 'E' },
-  ]);
+  const { crewMembers, addCrewMember, updateCrewMember, removeCrewMember } = useApp();
   const [selectedCrew, setSelectedCrew] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMember, setNewMember] = useState({ name: '', role: 'Cleaner', phone: '', email: '' });
@@ -35,26 +29,19 @@ const CrewManagement = ({ theme = 'dark' }) => {
 
   const handleAddMember = (e) => {
     e.preventDefault();
-    const newId = Math.max(...crewMembers.map(m => m.id)) + 1;
-    setCrewMembers([...crewMembers, {
-      id: newId,
+    addCrewMember({
       ...newMember,
       status: 'available',
       jobsToday: 0,
       avatar: newMember.name.charAt(0).toUpperCase()
-    }]);
+    });
     setNewMember({ name: '', role: 'Cleaner', phone: '', email: '' });
     setShowAddForm(false);
   };
 
-  const toggleStatus = (id) => {
-    setCrewMembers(crewMembers.map(member => {
-      if (member.id === id) {
-        const newStatus = member.status === 'available' ? 'busy' : 'available';
-        return { ...member, status: newStatus };
-      }
-      return member;
-    }));
+  const toggleStatus = (id, currentStatus) => {
+    const newStatus = currentStatus === 'available' ? 'busy' : 'available';
+    updateCrewMember(id, { status: newStatus });
   };
 
   const availableCrew = crewMembers.filter(m => m.status === 'available').length;
@@ -192,7 +179,7 @@ const CrewManagement = ({ theme = 'dark' }) => {
                   💬
                 </a>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); toggleStatus(member.id); }}
+                  onClick={(e) => { e.stopPropagation(); toggleStatus(member.id, member.status); }}
                   className={`flex-1 p-2 rounded-xl text-center transition ${
                     member.status === 'available'
                       ? 'bg-yellow-400/20 text-yellow-400 hover:bg-yellow-400/30'
@@ -256,16 +243,13 @@ const CrewManagement = ({ theme = 'dark' }) => {
 
             <div className="flex gap-2 mt-6">
               <Button 
-                onClick={() => toggleStatus(selectedCrew.id)}
+                onClick={() => { toggleStatus(selectedCrew.id, selectedCrew.status); setSelectedCrew(null); }}
                 className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-xl"
               >
                 Toggle Status
               </Button>
               <Button 
-                onClick={() => {
-                  setCrewMembers(crewMembers.filter(m => m.id !== selectedCrew.id));
-                  setSelectedCrew(null);
-                }}
+                onClick={() => { removeCrewMember(selectedCrew.id); setSelectedCrew(null); }}
                 className="bg-red-400/20 text-red-400 hover:bg-red-400/30 rounded-xl"
               >
                 🗑️ Remove
