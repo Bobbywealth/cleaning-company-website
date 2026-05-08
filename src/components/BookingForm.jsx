@@ -167,11 +167,11 @@ Special Requests: ${step2Data.specialRequests || 'None'}
   if (!contactSubmitted) {
     return (
       <Card className="bg-slate-50 border-slate-200 rounded-3xl shadow-lg">
-        <CardContent className="p-8">
+        <CardContent className="p-4 md:p-8">
           <div className="flex items-center gap-4 mb-8">
             <div className="bg-cyan-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">1</div>
             <div>
-              <h3 className="font-bold text-xl text-slate-800">Step 1: Your Contact Info</h3>
+              <h3 className="font-bold text-base md:text-xl text-slate-800">Step 1: Your Contact Info</h3>
               <p className="text-base text-slate-500">So we can reach you with your quote</p>
             </div>
           </div>
@@ -182,7 +182,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
               <input
                 value={step1Data.name}
                 onChange={(e) => setStep1Data({...step1Data, name: e.target.value})}
-                className={`w-full rounded-2xl bg-white border-2 ${step1Errors.name ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.name ? 'border-red-400' : 'border-slate-300'} px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 transition`}
                 placeholder="Enter your full name"
               />
               {step1Errors.name && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.name}</p>}
@@ -193,7 +193,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
               <input
                 value={step1Data.phone}
                 onChange={(e) => setStep1Data({...step1Data, phone: e.target.value})}
-                className={`w-full rounded-2xl bg-white border-2 ${step1Errors.phone ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.phone ? 'border-red-400' : 'border-slate-300'} px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 transition`}
                 placeholder="(862) 285-4949"
                 type="tel"
               />
@@ -205,7 +205,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
               <input
                 value={step1Data.email}
                 onChange={(e) => setStep1Data({...step1Data, email: e.target.value})}
-                className={`w-full rounded-2xl bg-white border-2 ${step1Errors.email ? 'border-red-400' : 'border-slate-300'} px-5 py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.email ? 'border-red-400' : 'border-slate-300'} px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 transition`}
                 placeholder="you@example.com"
                 type="email"
               />
@@ -215,7 +215,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl py-5 text-xl font-bold shadow-lg"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl md:rounded-2xl py-5 text-base md:text-xl font-bold shadow-lg"
             >
               {isSubmitting ? 'Submitting...' : 'Continue to Step 2 →'}
             </Button>
@@ -251,14 +251,14 @@ Special Requests: ${step2Data.specialRequests || 'None'}
         <form onSubmit={handleStep2Submit} className="space-y-8">
           {/* Service Type Selection */}
           <div>
-            <label className="block text-xl font-bold text-slate-800 mb-4">What type of cleaning do you need?</label>
+            <label className="block text-base md:text-xl font-bold text-slate-800 mb-4">What type of cleaning do you need?</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {serviceTypes.map((service) => (
                 <button
                   key={service.id}
                   type="button"
                   onClick={() => handleServiceSelect(service)}
-                  className={`p-5 rounded-2xl border-2 transition ${
+                  className={`p-5 rounded-xl md:rounded-2xl border-2 transition ${
                     selectedService?.id === service.id 
                       ? 'bg-cyan-100 border-cyan-500 text-slate-800' 
                       : 'bg-white border-slate-200 text-slate-700 hover:border-cyan-300'
@@ -275,7 +275,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           {/* Property Size */}
           {selectedService && (
             <div>
-              <label className="block text-xl font-bold text-slate-800 mb-4">Property Size</label>
+              <label className="block text-base md:text-xl font-bold text-slate-800 mb-4">Property Size</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {getRelevantSizes().map((size) => (
                   <button
@@ -303,7 +303,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
               <select
                 value={step2Data.bathrooms}
                 onChange={(e) => setStep2Data({...step2Data, bathrooms: e.target.value})}
-                className="w-full rounded-2xl bg-white border-2 border-slate-300 px-5 py-4 text-lg outline-none focus:border-cyan-400"
+                className="w-full rounded-xl md:rounded-2xl bg-white border-2 border-slate-300 px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400"
               >
                 <option value="">Select...</option>
                 <option value="1">1 Bathroom</option>
@@ -319,7 +319,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
               <select
                 value={step2Data.frequency}
                 onChange={(e) => setStep2Data({...step2Data, frequency: e.target.value})}
-                className="w-full rounded-2xl bg-white border-2 border-slate-300 px-5 py-4 text-lg outline-none focus:border-cyan-400"
+                className="w-full rounded-xl md:rounded-2xl bg-white border-2 border-slate-300 px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400"
               >
                 <option value="">Select...</option>
                 <option value="One-time">One-time Clean</option>
@@ -336,7 +336,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
             <textarea
               value={step2Data.specialRequests}
               onChange={(e) => setStep2Data({...step2Data, specialRequests: e.target.value})}
-              className="w-full rounded-2xl bg-white border-2 border-slate-300 px-5 py-4 text-lg outline-none focus:border-cyan-400 min-h-28"
+              className="w-full rounded-xl md:rounded-2xl bg-white border-2 border-slate-300 px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 min-h-28"
               placeholder="Pets, specific areas to focus on, access instructions, preferred time, etc."
             />
           </div>
@@ -344,7 +344,7 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           <Button 
             type="submit" 
             disabled={isSubmitting}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl py-5 text-xl font-bold shadow-lg"
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl md:rounded-2xl py-5 text-base md:text-xl font-bold shadow-lg"
           >
             {isSubmitting ? 'Submitting...' : '💰 Get My Free Quote!'}
           </Button>
