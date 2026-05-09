@@ -56,6 +56,13 @@ const serviceAreas = [
   "Princeton", "Morristown", "Asbury Park", "Weehawken", "Bayonne"
 ];
 
+const counties = [
+  { name: "Union County", cities: ["Elizabeth", "Jersey City", "Union", "Westfield", "Summit", "Cranford", "Scotch Plains", "Fanwood"] },
+  { name: "Essex County", cities: ["Newark", "East Orange", "Orange", "Bloomfield", "Montclair", "West Orange", "Livingston", "South Orange"] },
+  { name: "Hudson County", cities: ["Hoboken", "Jersey City", "Weehawken", "Bayonne", "Union City", "North Bergen", "West New York", "Secaucus"] },
+  { name: "Bergen County", cities: ["Hackensack", "Englewood", "Teaneck", "Fort Lee", "Ridgefield", "Garfield", "Fair Lawn", "Paramus"] },
+];
+
 const Home = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -317,19 +324,32 @@ const Home = () => {
           </motion.div>
         </section>
 
-        {/* Service Areas Banner */}
-        <section className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-y border-cyan-500/20 py-6" aria-label="Service areas in New Jersey">
+        {/* Service Areas Banner - Counties */}
+        <section className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-y border-cyan-500/20 py-10" aria-label="Service areas in New Jersey">
           <div className="max-w-7xl mx-auto px-5">
-            <p className="text-center text-sm text-cyan-200 mb-4">
-              <strong className="text-lg">🏆 Proudly Serving All of New Jersey Including:</strong>
+            <p className="text-center text-cyan-200 mb-6">
+              <strong className="text-2xl">🏆 Proudly Serving All of New Jersey</strong>
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {serviceAreas.map((area) => (
-                <span key={area} className="bg-slate-800/50 backdrop-blur px-4 py-1.5 rounded-full text-sm text-slate-300 hover:bg-cyan-500/20 hover:text-cyan-300 transition cursor-default">
-                  {area}
-                </span>
+            <p className="text-center text-slate-300 mb-8 text-lg">Including the counties of Union, Essex, Hudson, and Bergen:</p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {counties.map((county) => (
+                <div key={county.name} className="bg-slate-800/50 backdrop-blur rounded-2xl p-5 border border-cyan-500/20">
+                  <h3 className="font-bold text-cyan-300 text-lg mb-3 flex items-center gap-2">
+                    <span>📍</span> {county.name}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {county.cities.map((city) => (
+                      <span key={city} className="text-sm text-slate-300 bg-slate-700/50 px-2 py-1 rounded-lg">
+                        {city}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
+            <p className="text-center text-slate-300 mt-8 text-sm">
+              Also serving: Jersey City, Newark, Hoboken, New Brunswick, Trenton, Edison, Paterson, Elizabeth, Camden, Atlantic City, Princeton, Morristown, Asbury Park, Weehawken, Bayonne
+            </p>
           </div>
         </section>
 
