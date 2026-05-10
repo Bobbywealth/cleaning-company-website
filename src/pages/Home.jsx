@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +28,24 @@ const services = [
     title: "Post-Construction",
     desc: "Dust removal, debris wipe-downs, floor cleanup, and final polish after renovations or construction projects in New Jersey.",
     cityKeywords: "post construction cleaning NJ, after builders cleaning"
+  },
+  {
+    icon: "🏠",
+    title: "Apartment Cleaning",
+    desc: "Professional apartment cleaning services for tenants and landlords in Essex, Union, Hudson, and Bergen County NJ.",
+    cityKeywords: "apartment cleaning NJ, condo cleaning New Jersey"
+  },
+  {
+    icon: "🔑",
+    title: "Airbnb Cleaning",
+    desc: "Fast turnkey cleaning for short-term rentals and vacation homes throughout New Jersey. Keep your guests happy!",
+    cityKeywords: "Airbnb cleaning NJ, vacation rental cleaning New Jersey"
+  },
+  {
+    icon: "🍽️",
+    title: "Restaurant Cleaning",
+    desc: "Comprehensive restaurant cleaning services including kitchen hoods, dining areas, restrooms, and health-code ready sanitation.",
+    cityKeywords: "restaurant cleaning NJ, commercial kitchen cleaning New Jersey"
   },
 ];
 
@@ -63,16 +81,58 @@ const counties = [
   { name: "Bergen County", cities: ["Hackensack", "Englewood", "Teaneck", "Fort Lee", "Ridgefield", "Garfield", "Fair Lawn", "Paramus"] },
 ];
 
+const faqs = [
+  {
+    question: "How much does professional cleaning service cost in New Jersey?",
+    answer: "Our residential cleaning services in New Jersey start from $99 for basic cleaning. Deep cleaning starts at $199. Commercial and specialty services are quoted custom based on your property size and specific needs. Contact us for a free personalized quote for your Essex, Union, Hudson, or Bergen County home or business."
+  },
+  {
+    question: "Do you offer both residential and commercial cleaning services in NJ?",
+    answer: "Yes! 360 Cleaning Co. offers comprehensive cleaning services for both homes and businesses throughout New Jersey. Our residential services include regular home cleaning, deep cleaning, move-in/move-out cleaning, and apartment cleaning. Our commercial services cover offices, restaurants, retail spaces, and other business properties."
+  },
+  {
+    question: "Do you bring your own cleaning supplies and equipment?",
+    answer: "Yes, our professional cleaning teams in New Jersey arrive with all necessary supplies, equipment, and eco-friendly cleaning products. We use professional-grade cleaners that are effective yet safe for your family, pets, and employees."
+  },
+  {
+    question: "Do you offer move-in and move-out cleaning services in New Jersey?",
+    answer: "Absolutely! We provide comprehensive move-in and move-out cleaning services throughout New Jersey, including deep cleaning of kitchens, bathrooms, all rooms, appliances, and hard-to-reach areas. Our move-out cleaning helps ensure you get your security deposit back."
+  },
+  {
+    question: "What counties and areas of New Jersey do you serve?",
+    answer: "360 Cleaning Co. proudly serves all of New Jersey, with primary coverage in Essex County, Union County, Hudson County, and Bergen County. We service cities including Jersey City, Newark, Hoboken, New Brunswick, Trenton, Edison, Paterson, Elizabeth, and all surrounding areas in North Jersey."
+  },
+  {
+    question: "How do I get a free cleaning quote in New Jersey?",
+    answer: "Getting a free quote is easy! You can call us directly at (862) 285-4949, fill out our online quote form, or use the contact form on our website. We typically respond to quote requests within 2 hours during business hours (7AM-8PM, 7 days a week)."
+  },
+  {
+    question: "Do you offer recurring or subscription cleaning services in NJ?",
+    answer: "Yes, we offer flexible recurring cleaning plans for homes and businesses throughout New Jersey. Choose from weekly, bi-weekly, or monthly service to keep your space consistently clean. Many of our customers prefer our recurring plans for ongoing maintenance."
+  },
+  {
+    question: "Do you clean Airbnb properties and short-term rentals in New Jersey?",
+    answer: "Yes! We specialize in Airbnb turnkey cleaning and short-term rental cleaning services throughout New Jersey. We understand the importance of quick turnaround times for hosts in Jersey City, Hoboken, and all NJ vacation rentals."
+  }
+];
+
+const galleryImages = [
+  { before: "Kitchen with grease buildup", after: "Spotless kitchen in Newark NJ" },
+  { before: "Bathroom with hard water stains", after: "Sparkling bathroom in Jersey City" },
+  { before: "Dusty post-construction space", after: "Move-in ready apartment in Hoboken" },
+];
+
 const Home = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
   const bookingRef = useRef(null);
   const servicesRef = useRef(null);
   const packagesRef = useRef(null);
+  const faqRef = useRef(null);
 
-  // Track scroll for navbar shadow
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -86,7 +146,20 @@ const Home = () => {
   };
 
   const handleGetQuote = () => {
+    if (window.trackQuoteClick) window.trackQuoteClick();
+    if (window.trackMetaQuoteClick) window.trackMetaQuoteClick();
     navigate('/admin');
+  };
+
+  const handlePhoneClick = () => {
+    if (window.trackPhoneClick) window.trackPhoneClick();
+    if (window.trackMetaPhoneClick) window.trackMetaPhoneClick();
+  };
+
+  const handleQuoteButtonClick = () => {
+    if (window.trackQuoteClick) window.trackQuoteClick();
+    if (window.trackMetaQuoteClick) window.trackMetaQuoteClick();
+    navigate('/quote');
   };
 
   return (
@@ -96,9 +169,7 @@ const Home = () => {
         <div className="absolute bottom-20 right-1/4 h-72 w-72 rounded-full bg-blue-700 blur-3xl" />
       </div>
 
-      {/* Enhanced Header */}
       <header className={`relative z-50 transition-all duration-300 ${scrolled ? 'bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-cyan-500/10' : 'bg-slate-950/75 backdrop-blur-xl'} border-b border-white/10`}>
-        {/* Top bar with info */}
         <div className="hidden md:block bg-cyan-500/10 border-b border-cyan-500/20">
           <div className="max-w-7xl mx-auto px-5 py-2 flex justify-between items-center text-sm">
             <div className="flex items-center gap-6">
@@ -110,15 +181,13 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Main navbar */}
         <div className="max-w-7xl mx-auto px-5 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <div className="relative">
                 <img
                   src="https://iili.io/Btud5oF.th.png"
-                  alt="360 Cleaning Co. - Professional Cleaning Services in New Jersey"
+                  alt="360 Cleaning Co. - Professional Cleaning Services in Essex, Union, Hudson, Bergen County New Jersey"
                   className="h-14 w-14 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20 transition-transform hover:scale-105"
                 />
                 <div className="absolute -bottom-1 -right-1 bg-cyan-400 text-slate-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -131,7 +200,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
               <button onClick={() => scrollToSection(servicesRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
                 Services
@@ -139,6 +207,10 @@ const Home = () => {
               </button>
               <button onClick={() => scrollToSection(packagesRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
                 Pricing
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
+              </button>
+              <button onClick={() => scrollToSection(faqRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
+                FAQ
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
               </button>
               <button onClick={() => scrollToSection(bookingRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
@@ -152,17 +224,17 @@ const Home = () => {
               </button>
             </nav>
 
-            {/* CTA & Mobile Toggle */}
             <div className="flex items-center gap-4">
               <a 
                 href="tel:+18622854949" 
+                onClick={handlePhoneClick}
                 className="hidden md:flex items-center gap-2 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-xl transition border border-cyan-400/30"
               >
                 <span>📞</span>
                 <span className="font-semibold">(862) 285-4949</span>
               </a>
               <Button 
-                onClick={() => navigate('/quote')}
+                onClick={handleQuoteButtonClick}
                 className="hidden md:inline-flex bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold shadow-lg shadow-cyan-500/30 transition-all hover:shadow-cyan-500/50"
               >
                 Get Free Quote
@@ -174,21 +246,9 @@ const Home = () => {
               >
                 <AnimatePresence mode="wait">
                   {mobileOpen ? (
-                    <motion.span 
-                      key="close"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
-                      className="text-xl"
-                    >×</motion.span>
+                    <motion.span key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} className="text-xl">×</motion.span>
                   ) : (
-                    <motion.span 
-                      key="menu"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
-                      className="text-xl"
-                    >☰</motion.span>
+                    <motion.span key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} className="text-xl">☰</motion.span>
                   )}
                 </AnimatePresence>
               </button>
@@ -196,7 +256,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
@@ -206,39 +265,15 @@ const Home = () => {
               className="lg:hidden overflow-hidden bg-slate-900/95 backdrop-blur-xl border-t border-white/10"
             >
               <div className="max-w-7xl mx-auto px-5 py-6 space-y-4">
-                <button 
-                  onClick={() => scrollToSection(servicesRef)} 
-                  className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition"
-                >
-                  🧹 Services
-                </button>
-                <button 
-                  onClick={() => scrollToSection(packagesRef)} 
-                  className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition"
-                >
-                  💰 Pricing
-                </button>
-                <button 
-                  onClick={() => scrollToSection(bookingRef)} 
-                  className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition"
-                >
-                  📅 Book Now
-                </button>
+                <button onClick={() => scrollToSection(servicesRef)} className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition">🧹 Services</button>
+                <button onClick={() => scrollToSection(packagesRef)} className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition">💰 Pricing</button>
+                <button onClick={() => scrollToSection(faqRef)} className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition">❓ FAQ</button>
+                <button onClick={() => scrollToSection(bookingRef)} className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-200 hover:bg-white/10 transition">📅 Book Now</button>
                 <div className="pt-4 border-t border-white/10">
-                  <a href="tel:+18622854949" className="flex items-center gap-3 py-3 px-4 text-cyan-400 font-semibold">
-                    📞 (862) 285-4949
-                  </a>
-                  <button 
-                    onClick={handleGetQuote} 
-                    className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-400 hover:bg-white/10 transition"
-                  >
-                    🔐 Admin Login
-                  </button>
+                  <a href="tel:+18622854949" onClick={handlePhoneClick} className="flex items-center gap-3 py-3 px-4 text-cyan-400 font-semibold">📞 (862) 285-4949</a>
+                  <button onClick={handleGetQuote} className="block w-full text-left py-3 px-4 rounded-xl text-lg font-medium text-slate-400 hover:bg-white/10 transition">🔐 Admin Login</button>
                 </div>
-                <Button 
-                  onClick={() => navigate('/quote')}
-                  className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold py-4"
-                >
+                <Button onClick={handleQuoteButtonClick} className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold py-4">
                   Get Free Quote Now
                 </Button>
               </div>
@@ -248,7 +283,6 @@ const Home = () => {
       </header>
 
       <main className="relative z-10">
-        {/* Hero Section */}
         <section className="max-w-7xl mx-auto px-5 py-20 grid lg:grid-cols-2 gap-12 items-center" aria-labelledby="hero-heading">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 mb-6" role="status">
@@ -258,11 +292,11 @@ const Home = () => {
               New Jersey's Most Trusted <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Cleaning Professionals</span>
             </h1>
             <p className="mt-6 text-lg text-slate-300 max-w-xl">
-              Professional residential, commercial, deep cleaning, and post-construction cleanup serving all of New Jersey with fast quotes, easy booking, and reliable service teams.
+              Professional residential, commercial, deep cleaning, Airbnb, apartment, and restaurant cleaning serving all of New Jersey with fast quotes, easy booking, and reliable service teams.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Button 
-                onClick={() => navigate('/quote')}
+                onClick={handleQuoteButtonClick}
                 className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-base font-bold shadow-lg shadow-cyan-500/30"
                 aria-label="Book professional cleaning service in New Jersey"
               >
@@ -272,7 +306,6 @@ const Home = () => {
                 onClick={() => scrollToSection(servicesRef)}
                 variant="outline" 
                 className="border-2 border-white/20 text-white hover:bg-white/10 rounded-xl px-8 py-6 text-base"
-                aria-label="View our NJ cleaning services"
               >
                 View Services
               </Button>
@@ -299,11 +332,7 @@ const Home = () => {
                       <div className="text-4xl" aria-hidden="true">✨</div>
                     </div>
                     <div className="grid gap-4 mt-8">
-                      {[
-                        "Choose home or business cleaning in NJ",
-                        "Select one-time or recurring NJ service",
-                        "Receive confirmation and crew assignment",
-                      ].map((item) => (
+                      {["Choose home or business cleaning in NJ", "Select one-time or recurring NJ service", "Receive confirmation and crew assignment"].map((item) => (
                         <div key={item} className="flex items-center gap-3 rounded-2xl bg-white/70 p-4 shadow-sm">
                           <span className="text-cyan-700" aria-hidden="true">✅</span>
                           <span className="font-semibold">{item}</span>
@@ -324,24 +353,19 @@ const Home = () => {
           </motion.div>
         </section>
 
-        {/* Service Areas Banner - Counties */}
-        <section className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-y border-cyan-500/20 py-10" aria-label="Service areas in New Jersey">
+        <section className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-y border-cyan-500/20 py-12" aria-labelledby="north-jersey-heading">
           <div className="max-w-7xl mx-auto px-5">
-            <p className="text-center text-cyan-200 mb-6">
-              <strong className="text-2xl">🏆 Proudly Serving All of New Jersey</strong>
+            <h2 id="north-jersey-heading" className="text-3xl md:text-4xl font-black text-center mb-4">Cleaning Services Across North Jersey</h2>
+            <p className="text-center text-slate-300 mb-8 text-lg max-w-3xl mx-auto">
+              360 Cleaning Co. proudly provides professional cleaning services throughout <strong className="text-cyan-300">Essex County</strong>, <strong className="text-cyan-300">Union County</strong>, <strong className="text-cyan-300">Hudson County</strong>, and <strong className="text-cyan-300">Bergen County</strong> New Jersey.
             </p>
-            <p className="text-center text-slate-300 mb-8 text-lg">Including the counties of Union, Essex, Hudson, and Bergen:</p>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {counties.map((county) => (
                 <div key={county.name} className="bg-slate-800/50 backdrop-blur rounded-2xl p-5 border border-cyan-500/20">
-                  <h3 className="font-bold text-cyan-300 text-lg mb-3 flex items-center gap-2">
-                    <span>📍</span> {county.name}
-                  </h3>
+                  <h3 className="font-bold text-cyan-300 text-lg mb-3 flex items-center gap-2"><span>📍</span> {county.name}</h3>
                   <div className="flex flex-wrap gap-2">
                     {county.cities.map((city) => (
-                      <span key={city} className="text-sm text-slate-300 bg-slate-700/50 px-2 py-1 rounded-lg">
-                        {city}
-                      </span>
+                      <span key={city} className="text-sm text-slate-300 bg-slate-700/50 px-2 py-1 rounded-lg">{city}</span>
                     ))}
                   </div>
                 </div>
@@ -353,7 +377,6 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Services Section */}
         <section ref={servicesRef} className="max-w-7xl mx-auto px-5 py-16" aria-labelledby="services-heading">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10">
             <div>
@@ -361,16 +384,14 @@ const Home = () => {
               <h2 id="services-heading" className="text-4xl font-black mt-2">Professional Cleaning Services for Every NJ Need</h2>
             </div>
             <p className="text-slate-300 max-w-xl">
-              360 Cleaning Co. is New Jersey's premium cleaning service for homeowners, offices, restaurants, real estate agents, landlords, and contractors throughout the Garden State.
+              360 Cleaning Co. is New Jersey's premium cleaning service for homeowners, offices, restaurants, real estate agents, landlords, Airbnb hosts, and contractors throughout the Garden State.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {services.map((service) => (
-              <Card key={service.title} className="bg-white/10 border-white/10 rounded-3xl hover:bg-white/[0.14] transition cursor-pointer group" onClick={() => navigate('/quote')}>
+              <Card key={service.title} className="bg-white/10 border-white/10 rounded-3xl hover:bg-white/[0.14] transition cursor-pointer group" onClick={handleQuoteButtonClick}>
                 <CardContent className="p-6">
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-400/30 to-blue-400/30 flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">
-                    {service.icon}
-                  </div>
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-cyan-400/30 to-blue-400/30 flex items-center justify-center mb-5 text-3xl group-hover:scale-110 transition-transform">{service.icon}</div>
                   <h3 className="text-xl font-bold text-white">{service.title}</h3>
                   <p className="text-slate-300 mt-3 text-sm leading-relaxed">{service.desc}</p>
                 </CardContent>
@@ -379,7 +400,6 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Why Choose Us Section */}
         <section className="bg-slate-900/50 py-16" aria-labelledby="why-choose-heading">
           <div className="max-w-7xl mx-auto px-5">
             <div className="text-center mb-10">
@@ -406,7 +426,39 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Pricing Section */}
+        <section className="max-w-7xl mx-auto px-5 py-16" aria-labelledby="gallery-heading">
+          <div className="text-center mb-10">
+            <p className="text-cyan-300 font-semibold">Our Work in New Jersey</p>
+            <h2 id="gallery-heading" className="text-4xl font-black mt-2">Real Cleaning Transformations in NJ</h2>
+            <p className="text-slate-300 mt-4 max-w-2xl mx-auto">
+              See before and after cleaning transformations for kitchens, bathrooms, apartments, offices, restaurants, and luxury spaces throughout Essex, Union, Hudson, and Bergen County New Jersey.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {galleryImages.map((item, index) => (
+              <Card key={index} className="bg-white/10 border-white/10 rounded-3xl overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="bg-slate-800 p-4 text-center">
+                      <p className="text-3xl mb-2">🔍</p>
+                      <p className="text-xs text-slate-400">{item.before}</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-cyan-900/30 to-blue-900/30 p-4 text-center">
+                      <p className="text-3xl mb-2">✨</p>
+                      <p className="text-xs text-cyan-300">{item.after}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Button onClick={handleQuoteButtonClick} className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-4 text-lg font-bold shadow-lg shadow-cyan-500/30">
+              Get Your Space Transformation →
+            </Button>
+          </div>
+        </section>
+
         <section ref={packagesRef} className="max-w-7xl mx-auto px-5 py-16" aria-labelledby="pricing-heading">
           <div className="text-center mb-10">
             <p className="text-cyan-300 font-semibold">Affordable NJ Pricing</p>
@@ -424,11 +476,7 @@ const Home = () => {
                       <p key={detail} className={`flex items-center gap-3 text-sm ${pkg.featured ? 'text-slate-800' : ''}`}>✅ {detail}</p>
                     ))}
                   </div>
-                  <Button 
-                    onClick={() => navigate('/quote')}
-                    className={`w-full mt-8 rounded-xl ${pkg.featured ? "bg-slate-950 text-white hover:bg-slate-800 shadow-lg" : "bg-white text-slate-950 hover:bg-slate-200"}`}
-                    aria-label={`Request quote for ${pkg.name} in New Jersey`}
-                  >
+                  <Button onClick={handleQuoteButtonClick} className={`w-full mt-8 rounded-xl ${pkg.featured ? "bg-slate-950 text-white hover:bg-slate-800 shadow-lg" : "bg-white text-slate-950 hover:bg-slate-200"}`}>
                     Request Quote
                   </Button>
                 </CardContent>
@@ -437,7 +485,34 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Testimonials */}
+        <section ref={faqRef} className="bg-slate-900/50 py-16" aria-labelledby="faq-heading">
+          <div className="max-w-3xl mx-auto px-5">
+            <div className="text-center mb-10">
+              <p className="text-cyan-300 font-semibold">Common Questions</p>
+              <h2 id="faq-heading" className="text-4xl font-black mt-2">Frequently Asked Questions About NJ Cleaning</h2>
+            </div>
+            <div className="space-y-4">
+              {faqs.map((faq, index) => (
+                <Card key={index} className="bg-white/10 border-white/10 rounded-2xl overflow-hidden">
+                  <CardContent className="p-0">
+                    <button onClick={() => setOpenFaq(openFaq === index ? null : index)} className="w-full flex items-center justify-between p-6 text-left">
+                      <span className="font-bold text-lg text-white pr-4">{faq.question}</span>
+                      <span className={`text-cyan-400 text-2xl transition-transform ${openFaq === index ? 'rotate-45' : ''}`}>+</span>
+                    </button>
+                    <AnimatePresence>
+                      {openFaq === index && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                          <div className="px-6 pb-6 text-slate-300">{faq.answer}</div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="bg-gradient-to-b from-cyan-900/20 to-slate-900/50 py-16" aria-labelledby="testimonials-heading">
           <div className="max-w-7xl mx-auto px-5">
             <div className="text-center mb-10">
@@ -464,58 +539,36 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Booking Section */}
         <section ref={bookingRef} className="max-w-7xl mx-auto px-5 py-16 grid lg:grid-cols-2 gap-8 items-start" aria-labelledby="booking-heading">
           <div>
             <p className="text-cyan-300 font-semibold">Book Your NJ Cleaning</p>
             <h2 id="booking-heading" className="text-4xl font-black mt-2">Request a Free Estimate in New Jersey</h2>
             <p className="text-slate-300 mt-4">Get your personalized cleaning quote for your New Jersey home or business. Our NJ team responds quickly with competitive pricing.</p>
             <div className="mt-8 space-y-4 text-slate-300">
-              <p className="flex items-center gap-3">
-                <span className="text-2xl" aria-hidden="true">📞</span>
-                <a href="tel:+18622854949" className="hover:text-cyan-300 text-lg">(862) 285-4949</a>
-              </p>
-              <p className="flex items-center gap-3">
-                <span className="text-2xl" aria-hidden="true">✉️</span>
-                <a href="mailto:info@360cleaningco.com" className="hover:text-cyan-300">info@360cleaningco.com</a>
-              </p>
-              <p className="flex items-center gap-3">
-                <span className="text-2xl" aria-hidden="true">📍</span>
-                <span>Serving <strong className="text-cyan-400">All of New Jersey</strong> including Jersey City, Newark, Hoboken, and surrounding areas</span>
-              </p>
+              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">📞</span><a href="tel:+18622854949" onClick={handlePhoneClick} className="hover:text-cyan-300 text-lg">(862) 285-4949</a></p>
+              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">✉️</span><a href="mailto:info@360cleaningco.com" className="hover:text-cyan-300">info@360cleaningco.com</a></p>
+              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">📍</span><span>Serving <strong className="text-cyan-400">All of New Jersey</strong> including Jersey City, Newark, Hoboken, and surrounding areas</span></p>
             </div>
-            <Button 
-              onClick={() => navigate('/quote')}
-              className="mt-8 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-lg font-bold shadow-lg shadow-cyan-500/30"
-            >
+            <Button onClick={handleQuoteButtonClick} className="mt-8 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-lg font-bold shadow-lg shadow-cyan-500/30">
               Get Your Free Quote →
             </Button>
           </div>
-
           <Card className="bg-white/10 border-white/10 rounded-3xl p-8 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h3 className="text-2xl font-bold text-white mb-4">Ready to Book?</h3>
             <p className="text-slate-300 mb-6">Fill out our simple form and get a personalized quote in under 2 minutes.</p>
-            <Button 
-              onClick={() => navigate('/quote')}
-              className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold py-4"
-            >
+            <Button onClick={handleQuoteButtonClick} className="w-full bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold py-4">
               Go to Quote Form →
             </Button>
           </Card>
         </section>
 
-        {/* Footer */}
         <footer className="border-t border-white/10 mt-16 bg-slate-950" role="contentinfo">
           <div className="max-w-7xl mx-auto px-5 py-12">
             <div className="grid md:grid-cols-4 gap-8">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <img
-                    src="https://iili.io/Btud5oF.th.png"
-                    alt="360 Cleaning Co."
-                    className="h-12 w-12 rounded-xl object-cover border border-white/10"
-                  />
+                  <img src="https://iili.io/Btud5oF.th.png" alt="360 Cleaning Co. - Professional Cleaning Services in New Jersey" className="h-12 w-12 rounded-xl object-cover border border-white/10" />
                   <div>
                     <p className="font-bold text-white">360 Cleaning Co.</p>
                     <p className="text-xs text-cyan-400">New Jersey's Premier Cleaners</p>
@@ -529,16 +582,20 @@ const Home = () => {
                   <li className="hover:text-cyan-400 cursor-pointer">Residential Cleaning</li>
                   <li className="hover:text-cyan-400 cursor-pointer">Commercial Cleaning</li>
                   <li className="hover:text-cyan-400 cursor-pointer">Deep Cleaning</li>
-                  <li className="hover:text-cyan-400 cursor-pointer">Post-Construction</li>
+                  <li className="hover:text-cyan-400 cursor-pointer">Apartment Cleaning</li>
+                  <li className="hover:text-cyan-400 cursor-pointer">Airbnb Cleaning</li>
+                  <li className="hover:text-cyan-400 cursor-pointer">Restaurant Cleaning</li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-bold text-white mb-4">Service Areas</h4>
                 <ul className="space-y-2 text-slate-400 text-sm">
+                  <li>Essex County NJ</li>
+                  <li>Union County NJ</li>
+                  <li>Hudson County NJ</li>
+                  <li>Bergen County NJ</li>
                   <li>Jersey City</li>
                   <li>Newark & Hoboken</li>
-                  <li>New Brunswick</li>
-                  <li>All of New Jersey</li>
                 </ul>
               </div>
               <div>
@@ -557,6 +614,20 @@ const Home = () => {
           </div>
         </footer>
       </main>
+
+      {/* Sticky Mobile Quote Button */}
+      <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden pointer-events-none">
+        <div className="flex gap-3 pointer-events-auto max-w-md mx-auto">
+          <a href="tel:+18622854949" onClick={handlePhoneClick} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl flex items-center justify-center gap-2 transition border border-white/20">
+            <span className="text-xl">📞</span>
+            <span>Call Now</span>
+          </a>
+          <button onClick={handleQuoteButtonClick} className="flex-1 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 font-bold py-4 px-6 rounded-2xl shadow-2xl flex items-center justify-center gap-2 transition hover:from-cyan-300 hover:to-cyan-400">
+            <span className="text-xl">✨</span>
+            <span>Get Quote</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

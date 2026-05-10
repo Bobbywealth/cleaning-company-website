@@ -80,6 +80,9 @@ const BookingForm = ({ onSuccess }) => {
     setLeadId(lead.id);
     setContactSubmitted(true);
     setIsSubmitting(false);
+    // Track quote form step 1 submission
+    if (window.trackQuoteSubmit) window.trackQuoteSubmit();
+    if (window.trackMetaLead) window.trackMetaLead();
   };
 
   // Handle service selection
