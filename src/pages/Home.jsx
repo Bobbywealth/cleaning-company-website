@@ -4,6 +4,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+// Dynamic next-available scheduling text
+const getNextAvailable = () => {
+  const now = new Date();
+  const hour = now.getHours();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  if (hour < 17) {
+    return `Today at ${hour < 9 ? '9:00 AM' : `${((hour + 1) % 12) || 12}:00 ${hour + 1 < 12 ? 'AM' : 'PM'}`}`;
+  }
+  return `${dayNames[tomorrow.getDay()]} at 9:00 AM`;
+};
+
 const services = [
   {
     icon: "🏠",
@@ -342,7 +355,7 @@ const Home = () => {
                     <div className="mt-8 rounded-3xl bg-slate-950 text-white p-5 flex items-center justify-between">
                       <div>
                         <p className="text-sm text-slate-400">Next Available in NJ</p>
-                        <p className="font-bold text-xl">Tomorrow at 9:00 AM</p>
+                        <p className="font-bold text-xl">{getNextAvailable()}</p>
                       </div>
                       <div className="text-4xl" aria-hidden="true">📅</div>
                     </div>
