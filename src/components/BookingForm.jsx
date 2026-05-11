@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
+import { calculateCleaningEstimate, formatPrice, getSavingsMessage } from '@/utils/calculateCleaningEstimate';
+import {
+  COUNTIES,
+  CITY_AREAS,
+  AVAILABLE_ADD_ONS,
+} from '@/utils/pricingConstants';
 
 const serviceTypes = [
   { id: 'residential', icon: '🏠', name: 'Residential Cleaning', desc: 'Homes, apartments, condos' },
@@ -41,11 +47,51 @@ const BookingForm = ({ onSuccess }) => {
     propertySize: '',
     bathrooms: '',
     frequency: '',
-    specialRequests: ''
+    specialRequests: '',
+    county: '',
+    cityArea: 'Other',
+    addOns: [],
   });
   const [selectedService, setSelectedService] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [estimate, setEstimate] = useState(null);
+
+  // Calculate estimate whenever relevant fields change
+  useEffect(() => {
+    if (step2Data.serviceType && step2Data.propertySize && step2Data.bathrooms) {
+      const formData = {
+        serviceType: step2Data.serviceType,
+        propertySize: step2Data.propertySize,
+        bathrooms: step2Data.bathrooms,
+        frequency: step2Data.frequency || 'One-time',
+        addOns: step2Data.addOns,
+        county: step2Data.county || 'Union County',
+        cityArea: step2Data.cityArea || 'Other',
+      };
+      const calculatedEstimate = calculateCleaningEstimate(formData);
+      setEstimate(calculatedEstimate);
+
+      // Fire tracking event
+      if (window.trackQuoteEstimate) {
+        window.trackQuoteEstimate({
+          service_type: step2Data.serviceType,
+          property_size: step2Data.propertySize,
+          bathrooms: step2Data.bathrooms,
+          frequency: step2Data.frequency || 'One-time',
+          county: formData.county,
+          city_area: formData.cityArea,
+          add_ons: step2Data.addOns.join(', '),
+          add_ons_total: calculatedEstimate.addOnsTotal,
+          bathroom_adjustment: calculatedEstimate.bathroomAdjustment,
+          location_adjustment: calculatedEstimate.locationAdjustment,
+          frequency_discount_rate: calculatedEstimate.frequencyDiscountRate,
+          estimated_low: calculatedEstimate.lowEstimate,
+          estimated_high: calculatedEstimate.highEstimate,
+        });
+      }
+    }
+  }, [step2Data.serviceType, step2Data.propertySize, step2Data.bathrooms, step2Data.frequency, step2Data.addOns, step2Data.county, step2Data.cityArea]);
 
   // Validate Step 1
   const validateStep1 = () => {
@@ -91,6 +137,16 @@ const BookingForm = ({ onSuccess }) => {
     setStep2Data(prev => ({ ...prev, serviceType: service.name }));
   };
 
+  // Handle add-on toggle
+  const handleAddOnToggle = (addOnId) => {
+    setStep2Data(prev => {
+      const newAddOns = prev.addOns.includes(addOnId)
+        ? prev.addOns.filter(id => id !== addOnId)
+        : [...prev.addOns, addOnId];
+      return { ...prev, addOns: newAddOns };
+    });
+  };
+
   // Submit Step 2 (complete the lead)
   const handleStep2Submit = async (e) => {
     e.preventDefault();
@@ -100,16 +156,25 @@ const BookingForm = ({ onSuccess }) => {
       return;
     }
     
+    if (!step2Data.county) {
+      alert('Please select a county');
+      return;
+    }
+    
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Update lead with full details
+    // Update lead with full details including estimate
     const fullNotes = `
 Contact: ${step1Data.name} | ${step1Data.phone} | ${step1Data.email}
 Service: ${step2Data.serviceType}
 Property: ${step2Data.propertySize} | ${step2Data.bathrooms} bathrooms
 Frequency: ${step2Data.frequency || 'One-time'}
+County: ${step2Data.county}
+City/Area: ${step2Data.cityArea}
+Add-ons: ${step2Data.addOns.length > 0 ? step2Data.addOns.join(', ') : 'None'}
 Special Requests: ${step2Data.specialRequests || 'None'}
+${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.highEstimate}` : ''}
     `.trim();
     
     // Update lead with full details
@@ -122,7 +187,12 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           notes: fullNotes,
           propertySize: step2Data.propertySize,
           bathrooms: step2Data.bathrooms,
-          frequency: step2Data.frequency
+          frequency: step2Data.frequency,
+          county: step2Data.county,
+          cityArea: step2Data.cityArea,
+          addOns: step2Data.addOns,
+          estimatedLow: estimate?.lowEstimate,
+          estimatedHigh: estimate?.highEstimate,
         };
       }
       return l;
@@ -153,6 +223,12 @@ Special Requests: ${step2Data.specialRequests || 'None'}
           <p className="text-slate-600 text-lg mb-4">
             Thanks {step1Data.name}! We've received your request and will contact you at <span className="text-cyan-600 font-semibold">{step1Data.phone}</span> within 2 hours with your custom quote.
           </p>
+          {estimate && (
+            <div className="bg-white/70 rounded-xl p-4 mb-4 border border-green-200">
+              <p className="text-sm text-slate-500 mb-1">Your estimated price range:</p>
+              <p className="text-2xl font-bold text-green-600">${estimate.lowEstimate} - ${estimate.highEstimate}</p>
+            </div>
+          )}
           <div className="bg-white/70 rounded-xl p-4 text-left border border-green-200">
             <p className="text-sm text-slate-500 mb-2 font-medium">What happens next:</p>
             <ul className="text-sm text-slate-700 space-y-2">
@@ -333,6 +409,92 @@ Special Requests: ${step2Data.specialRequests || 'None'}
             </div>
           </div>
 
+          {/* County Selection */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-lg font-semibold text-slate-700 mb-3">County *</label>
+              <select
+                value={step2Data.county}
+                onChange={(e) => setStep2Data({...step2Data, county: e.target.value})}
+                className="w-full rounded-xl md:rounded-2xl bg-white border-2 border-slate-300 px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400"
+              >
+                <option value="">Select county...</option>
+                {COUNTIES.map(county => (
+                  <option key={county} value={county}>{county}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-lg font-semibold text-slate-700 mb-3">City / Area</label>
+              <select
+                value={step2Data.cityArea}
+                onChange={(e) => setStep2Data({...step2Data, cityArea: e.target.value})}
+                className="w-full rounded-xl md:rounded-2xl bg-white border-2 border-slate-300 px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400"
+              >
+                {CITY_AREAS.map(area => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Add-ons Section */}
+          <div>
+            <label className="block text-base md:text-xl font-bold text-slate-800 mb-4">Optional Add-ons</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {AVAILABLE_ADD_ONS.map((addon) => (
+                <button
+                  key={addon.id}
+                  type="button"
+                  onClick={() => handleAddOnToggle(addon.id)}
+                  className={`p-4 rounded-xl border-2 transition text-left ${
+                    step2Data.addOns.includes(addon.id)
+                      ? 'bg-cyan-100 border-cyan-500'
+                      : 'bg-white border-slate-200 hover:border-cyan-300'
+                  }`}
+                >
+                  <span className={`text-lg font-semibold block ${
+                    step2Data.addOns.includes(addon.id) ? 'text-cyan-700' : 'text-slate-700'
+                  }`}>{addon.name}</span>
+                  <span className="text-sm text-slate-500">+${addon.price}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Price Estimate Display */}
+          {estimate && (
+            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-2xl p-6">
+              <div className="text-center mb-4">
+                <p className="text-lg font-semibold text-slate-600 mb-1">Estimated Price Range</p>
+                <p className="text-4xl md:text-5xl font-black text-cyan-600">
+                  ${estimate.lowEstimate} - ${estimate.highEstimate}
+                </p>
+                {getSavingsMessage(step2Data.frequency || 'One-time', estimate.discountAmount) && (
+                  <p className="text-green-600 font-semibold mt-2">
+                    {getSavingsMessage(step2Data.frequency || 'One-time', estimate.discountAmount)}
+                  </p>
+                )}
+              </div>
+              
+              {/* Warning Notes */}
+              {estimate.notes && estimate.notes.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {estimate.notes.map((note, index) => (
+                    <div key={index} className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <span className="text-amber-500 text-lg">⚠️</span>
+                      <p className="text-sm text-amber-700">{note}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-slate-500 text-center">
+                This is an estimated price range. Final pricing may vary based on property condition, clutter level, access, pet hair, buildup, parking, travel time, and special requests.
+              </p>
+            </div>
+          )}
+
           {/* Special Requests */}
           <div>
             <label className="block text-lg font-semibold text-slate-700 mb-3">Special Requests or Notes (Optional)</label>
@@ -346,10 +508,10 @@ Special Requests: ${step2Data.specialRequests || 'None'}
 
           <Button 
             type="submit" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !step2Data.county}
             className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl md:rounded-2xl py-5 text-base md:text-xl font-bold shadow-lg"
           >
-            {isSubmitting ? 'Submitting...' : '💰 Get My Free Quote!'}
+            {isSubmitting ? 'Submitting...' : '💰 Submit Request For Final Quote'}
           </Button>
           
           <p className="text-center text-base text-slate-500">
