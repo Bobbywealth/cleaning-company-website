@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
@@ -30,6 +31,7 @@ const propertySizes = [
 
 const BookingForm = ({ onSuccess }) => {
   const { submitLead } = useApp();
+  const navigate = useNavigate();
   
   // Step 1: Contact Info (submits immediately)
   const [step1Data, setStep1Data] = useState({
@@ -201,9 +203,19 @@ ${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.high
     
     setShowSuccess(true);
     setIsSubmitting(false);
+    
+    // Navigate to Thank You page with quote data
     setTimeout(() => {
-      if (onSuccess) onSuccess();
-    }, 3000);
+      navigate('/thank-you', {
+        state: {
+          name: step1Data.name,
+          phone: step1Data.phone,
+          email: step1Data.email,
+          service: step2Data.serviceType,
+          estimatedPrice: estimate ? `${estimate.lowEstimate} - ${estimate.highEstimate}` : null,
+        }
+      });
+    }, 100);
   };
 
   const getRelevantSizes = () => {
@@ -212,35 +224,6 @@ ${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.high
     }
     return propertySizes.filter(s => !s.label.includes('Office'));
   };
-
-  // Show success screen
-  if (showSuccess) {
-    return (
-      <Card className="bg-gradient-to-br from-green-100 to-emerald-100 border-green-300 rounded-3xl">
-        <CardContent className="p-8 text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h3 className="text-2xl font-bold text-slate-800 mb-2">Quote Request Received!</h3>
-          <p className="text-slate-600 text-lg mb-4">
-            Thanks {step1Data.name}! We've received your request and will contact you at <span className="text-cyan-600 font-semibold">{step1Data.phone}</span> within 2 hours with your custom quote.
-          </p>
-          {estimate && (
-            <div className="bg-white/70 rounded-xl p-4 mb-4 border border-green-200">
-              <p className="text-sm text-slate-500 mb-1">Your estimated price range:</p>
-              <p className="text-2xl font-bold text-green-600">${estimate.lowEstimate} - ${estimate.highEstimate}</p>
-            </div>
-          )}
-          <div className="bg-white/70 rounded-xl p-4 text-left border border-green-200">
-            <p className="text-sm text-slate-500 mb-2 font-medium">What happens next:</p>
-            <ul className="text-sm text-slate-700 space-y-2">
-              <li>✅ We'll review your {step2Data.serviceType} request</li>
-              <li>✅ You'll receive a personalized quote via text/email</li>
-              <li>✅ We can schedule as early as tomorrow</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   // Step 1: Quick Contact Form (Light Theme, Large Text)
   if (!contactSubmitted) {
