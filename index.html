@@ -262,27 +262,22 @@
     }
     </script>
 
-    <!-- =================== GA4 TRACKING PLACEHOLDER =================== -->
-    <!-- TODO: Replace G-XXXXXXXXXX with your real GA4 Measurement ID -->
-    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> -->
+    <!-- =================== GOOGLE ADS TRACKING =================== -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18159287186"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      // TODO: Replace G-XXXXXXXXXX with real GA4 ID before launching ads
-      // gtag('config', 'G-XXXXXXXXXX', {
-      //   'link_attribution': true,
-      //   'anonymize_ip': true
-      // });
+
+      gtag('config', 'AW-18159287186');
 
       // Track quote form submissions
       window.trackQuoteSubmit = function() {
-        if (typeof gtag === 'function') {
-          gtag('event', 'generate_lead', {
-            'event_category': 'Quote Form',
-            'event_label': 'New Quote Request'
-          });
-        }
+        gtag('event', 'generate_lead', {
+          'event_category': 'Quote Form',
+          'event_label': 'New Quote Request'
+        });
         if (typeof fbq === 'function') {
           fbq('track', 'Lead');
         }
@@ -290,12 +285,10 @@
 
       // Track quote button clicks
       window.trackQuoteClick = function() {
-        if (typeof gtag === 'function') {
-          gtag('event', 'select_content', {
-            'content_type': 'quote_button',
-            'event_label': 'Get Quote Click'
-          });
-        }
+        gtag('event', 'select_content', {
+          'content_type': 'quote_button',
+          'event_label': 'Get Quote Click'
+        });
         if (typeof fbq === 'function') {
           fbq('track', 'Click');
         }
@@ -303,12 +296,10 @@
 
       // Track phone clicks
       window.trackPhoneClick = function() {
-        if (typeof gtag === 'function') {
-          gtag('event', 'click', {
-            'event_category': 'Contact',
-            'event_label': 'Phone Call Click'
-          });
-        }
+        gtag('event', 'click', {
+          'event_category': 'Contact',
+          'event_label': 'Phone Call Click'
+        });
         if (typeof fbq === 'function') {
           fbq('track', 'Contact');
         }
