@@ -1,0 +1,26 @@
+# Render Blueprint - Backend API Deployment
+# Deploy this file to Render using: render blueprint create
+
+services:
+  - type: web
+    name: 360cleaning-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: 360-cleaning-website
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
