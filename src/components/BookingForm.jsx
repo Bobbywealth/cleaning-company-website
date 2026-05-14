@@ -170,6 +170,7 @@ const BookingForm = ({ onSuccess }) => {
     const fullNotes = `
 Contact: ${step1Data.name} | ${step1Data.phone} | ${step1Data.email}
 Service: ${step2Data.serviceType}
+${step2Data.businessType ? `Business Type: ${step2Data.businessType}` : ''}
 Property: ${step2Data.propertySize} | ${step2Data.bathrooms} bathrooms
 Frequency: ${step2Data.frequency || 'One-time'}
 County: ${step2Data.county}
@@ -186,6 +187,7 @@ ${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.high
         return {
           ...l,
           service: step2Data.serviceType,
+          business_type: step2Data.businessType || '',
           notes: fullNotes,
           propertySize: step2Data.propertySize,
           bathrooms: step2Data.bathrooms,
@@ -333,6 +335,33 @@ ${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.high
               ))}
             </div>
           </div>
+
+          {/* Business Type - Only show for Commercial */}
+          {selectedService?.id === 'commercial' && (
+            <div>
+              <label className="block text-base md:text-xl font-bold text-slate-800 mb-4">What type of business?</label>
+              <select
+                value={step2Data.businessType || ''}
+                onChange={(e) => setStep2Data({...step2Data, businessType: e.target.value})}
+                className="w-full rounded-xl md:rounded-2xl bg-white border-2 border-slate-300 px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400"
+              >
+                <option value="">Select business type...</option>
+                <option value="Restaurant">Restaurant</option>
+                <option value="Bar/Club">Bar/Club</option>
+                <option value="Dental Office">Dental Office</option>
+                <option value="Medical Office">Medical Office</option>
+                <option value="Office Building">Office Building</option>
+                <option value="Retail Store">Retail Store</option>
+                <option value="Gym/Fitness">Gym/Fitness Center</option>
+                <option value="Salon/Spa">Salon/Spa</option>
+                <option value="Warehouse">Warehouse</option>
+                <option value="Daycare">Daycare</option>
+                <option value="Church">Church</option>
+                <option value="Auto Dealership">Auto Dealership</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          )}
 
           {/* Property Size */}
           {selectedService && (

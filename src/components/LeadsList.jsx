@@ -237,12 +237,12 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold">Lead & Quote CRM</h2>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => setShowAddForm(true)}
-              className="bg-green-400 hover:bg-green-500 text-slate-950 rounded-xl text-sm"
-            >
-              + Add Prospect
-            </Button>
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-green-400 hover:bg-green-500 text-slate-950 rounded-xl text-sm"
+              >
+                + Add Lead
+              </Button>
             <Button 
               onClick={() => setShowImportModal(true)}
               className="bg-purple-400 hover:bg-purple-500 text-slate-950 rounded-xl text-sm"
@@ -570,12 +570,12 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
         </div>
       </div>
 
-      {/* Add Prospect Modal */}
+      {/* Add Lead Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto`}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Add Commercial Prospect</h3>
+              <h3 className="text-xl font-bold">Add New Lead</h3>
               <button 
                 onClick={() => setShowAddForm(false)}
                 className="text-2xl hover:opacity-70"
@@ -584,14 +584,45 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
               </button>
             </div>
             <form onSubmit={handleAddLead} className="space-y-4">
+              {/* Lead Type Selector */}
               <div>
-                <label className="block text-sm font-medium mb-1">Business/Contact Name *</label>
+                <label className="block text-sm font-medium mb-2">Lead Type *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewLead({...newLead, service: 'Residential Cleaning', business_type: ''})}
+                    className={`p-3 rounded-xl border-2 transition ${
+                      newLead.service === 'Residential Cleaning' 
+                        ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' 
+                        : theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'
+                    }`}
+                  >
+                    🏠 Residential
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewLead({...newLead, service: 'Commercial Cleaning'})}
+                    className={`p-3 rounded-xl border-2 transition ${
+                      newLead.service === 'Commercial Cleaning' 
+                        ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' 
+                        : theme === 'dark' ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'
+                    }`}
+                  >
+                    🏢 Commercial
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {newLead.service === 'Commercial Cleaning' ? 'Business Name *' : 'Contact Name *'}
+                </label>
                 <input
                   type="text"
                   value={newLead.name}
                   onChange={(e) => setNewLead({...newLead, name: e.target.value})}
                   className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
-                  placeholder="Joe's Pizza & Pasta"
+                  placeholder={newLead.service === 'Commercial Cleaning' ? "Joe's Pizza & Pasta" : "John Smith"}
                   required
                 />
               </div>
@@ -613,28 +644,37 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                   value={newLead.email}
                   onChange={(e) => setNewLead({...newLead, email: e.target.value})}
                   className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
-                  placeholder="contact@business.com"
+                  placeholder={newLead.service === 'Commercial Cleaning' ? "contact@business.com" : "john@email.com"}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Business Type</label>
-                <select
-                  value={newLead.business_type}
-                  onChange={(e) => setNewLead({...newLead, business_type: e.target.value})}
-                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
-                >
-                  <option value="">Select type...</option>
-                  <option value="Restaurant">Restaurant</option>
-                  <option value="Bar/Club">Bar/Club</option>
-                  <option value="Dental Office">Dental Office</option>
-                  <option value="Medical Office">Medical Office</option>
-                  <option value="Office Building">Office Building</option>
-                  <option value="Retail Store">Retail Store</option>
-                  <option value="Gym/Fitness">Gym/Fitness</option>
-                  <option value="Salon/Spa">Salon/Spa</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+              
+              {/* Business Type - Only show for Commercial */}
+              {newLead.service === 'Commercial Cleaning' && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Business Type</label>
+                  <select
+                    value={newLead.business_type}
+                    onChange={(e) => setNewLead({...newLead, business_type: e.target.value})}
+                    className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                  >
+                    <option value="">Select type...</option>
+                    <option value="Restaurant">Restaurant</option>
+                    <option value="Bar/Club">Bar/Club</option>
+                    <option value="Dental Office">Dental Office</option>
+                    <option value="Medical Office">Medical Office</option>
+                    <option value="Office Building">Office Building</option>
+                    <option value="Retail Store">Retail Store</option>
+                    <option value="Gym/Fitness">Gym/Fitness</option>
+                    <option value="Salon/Spa">Salon/Spa</option>
+                    <option value="Warehouse">Warehouse</option>
+                    <option value="Daycare">Daycare</option>
+                    <option value="Church">Church</option>
+                    <option value="Auto Dealership">Auto Dealership</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium mb-1">Address</label>
                 <input
@@ -651,7 +691,7 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                   value={newLead.notes}
                   onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
                   className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
-                  placeholder="Met owner at local event..."
+                  placeholder={newLead.service === 'Commercial Cleaning' ? "Met owner at local event..." : "Referred by neighbor..."}
                   rows={3}
                 />
               </div>
@@ -667,7 +707,7 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                   type="submit"
                   className="flex-1 bg-green-400 hover:bg-green-500 text-slate-950 rounded-xl"
                 >
-                  Add Prospect
+                  Add Lead
                 </Button>
               </div>
             </form>
