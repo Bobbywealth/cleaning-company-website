@@ -2,9 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import Stripe from 'stripe';
 import { query, initializeDatabase } from './db.js';
 
 dotenv.config();
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2024-06-20',
+});
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -444,6 +450,82 @@ app.delete('/api/recurring/:id', authenticateToken, async (req, res) => {
     console.error('Delete recurring client error:', error);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// ============ STRIPE PAYMENT ROUTES ============
+
+// Create a payment intent
+app.post('/api/payments/create-intent', authenticateToken, async (req, res) => {
+  try {
+    const { amount, invoiceId, clientEmail, description } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    // Create payment intent with Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'usd',
+      metadata: {
+        invoiceId: invoiceId || '',
+        clientEmail: clientEmail || '',
+      },
+      description: description || `Payment for Invoice ${invoiceId}`,
+      receipt_email: clientEmail,
+    });
+
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+    });
+  } catch (error) {
+    console.error('Stripe payment intent error:', error);
+    res.status(500).json({ error: error.message || 'Payment processing error' });
+  }
+});
+
+// Get Stripe publishable key
+app.get('/api/payments/config', (req, res) => {
+  res.json({
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+  });
+});
+
+// Webhook for Stripe events
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    console.log('Stripe webhook secret not configured');
+    return res.status(500).json({ error: 'Webhook not configured' });
+  }
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      console.log('Payment succeeded:', paymentIntent.id);
+      // Update invoice status to paid here if needed
+      break;
+    case 'payment_intent.payment_failed':
+      const failedIntent = event.data.object;
+      console.log('Payment failed:', failedIntent.id);
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
 });
 
 // ============ STATS ROUTE ============
