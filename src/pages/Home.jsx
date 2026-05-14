@@ -628,16 +628,23 @@ const Home = () => {
         </footer>
       </main>
 
-      {/* Sticky Mobile Quote Button */}
-      <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden pointer-events-none">
-        <div className="flex gap-3 pointer-events-auto max-w-md mx-auto">
-          <a href="tel:+18622854949" onClick={handlePhoneClick} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl flex items-center justify-center gap-2 transition border border-white/20">
-            <span className="text-xl">📞</span>
-            <span>Call Now</span>
+      {/* Sticky Mobile CTA Bar - Optimized for Mobile Users */}
+      <div className="mobile-sticky-cta md:hidden">
+        <div className="flex gap-2 max-w-lg mx-auto">
+          <a 
+            href="tel:+18622854949" 
+            onClick={handlePhoneClick}
+            className="flex-1 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
+          >
+            <span className="text-2xl">📞</span>
+            <span className="text-sm font-extrabold">Call Now</span>
           </a>
-          <button onClick={handleQuoteButtonClick} className="flex-1 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 font-bold py-4 px-6 rounded-2xl shadow-2xl flex items-center justify-center gap-2 transition hover:from-cyan-300 hover:to-cyan-400">
-            <span className="text-xl">✨</span>
-            <span>Get Quote</span>
+          <button 
+            onClick={handleQuoteButtonClick} 
+            className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 active:from-cyan-500 active:to-blue-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
+          >
+            <span className="text-2xl">✨</span>
+            <span className="text-sm font-extrabold">Get Quote</span>
           </button>
         </div>
       </div>

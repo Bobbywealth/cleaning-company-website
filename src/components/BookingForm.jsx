@@ -242,44 +242,47 @@ ${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.high
           
           <form onSubmit={handleStep1Submit} className="space-y-6">
             <div>
-              <label className="block text-lg font-semibold text-slate-700 mb-2">Name *</label>
+              <label className="block text-base md:text-lg font-semibold text-slate-700 mb-2">Name *</label>
               <input
                 value={step1Data.name}
                 onChange={(e) => setStep1Data({...step1Data, name: e.target.value})}
-                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.name ? 'border-red-400' : 'border-slate-300'} px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.name ? 'border-red-400' : 'border-slate-300'} px-4 py-4 md:py-3 text-lg outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 transition touch-manipulation min-h-[56px]`}
                 placeholder="Enter your full name"
+                autoComplete="name"
               />
-              {step1Errors.name && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.name}</p>}
+              {step1Errors.name && <p className="text-red-500 text-sm mt-2 font-medium">{step1Errors.name}</p>}
             </div>
             
             <div>
-              <label className="block text-lg font-semibold text-slate-700 mb-2">Phone Number *</label>
+              <label className="block text-base md:text-lg font-semibold text-slate-700 mb-2">Phone Number *</label>
               <input
                 value={step1Data.phone}
                 onChange={(e) => setStep1Data({...step1Data, phone: e.target.value})}
-                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.phone ? 'border-red-400' : 'border-slate-300'} px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.phone ? 'border-red-400' : 'border-slate-300'} px-4 py-4 md:py-3 text-lg outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 transition touch-manipulation min-h-[56px]`}
                 placeholder="(862) 285-4949"
                 type="tel"
+                autoComplete="tel"
               />
-              {step1Errors.phone && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.phone}</p>}
+              {step1Errors.phone && <p className="text-red-500 text-sm mt-2 font-medium">{step1Errors.phone}</p>}
             </div>
             
             <div>
-              <label className="block text-lg font-semibold text-slate-700 mb-2">Email Address *</label>
+              <label className="block text-base md:text-lg font-semibold text-slate-700 mb-2">Email Address *</label>
               <input
                 value={step1Data.email}
                 onChange={(e) => setStep1Data({...step1Data, email: e.target.value})}
-                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.email ? 'border-red-400' : 'border-slate-300'} px-3 md:px-5 py-3 md:py-4 text-lg outline-none focus:border-cyan-400 transition`}
+                className={`w-full rounded-xl md:rounded-2xl bg-white border-2 ${step1Errors.email ? 'border-red-400' : 'border-slate-300'} px-4 py-4 md:py-3 text-lg outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100 transition touch-manipulation min-h-[56px]`}
                 placeholder="you@example.com"
                 type="email"
+                autoComplete="email"
               />
-              {step1Errors.email && <p className="text-red-500 text-sm mt-1 font-medium">{step1Errors.email}</p>}
+              {step1Errors.email && <p className="text-red-500 text-sm mt-2 font-medium">{step1Errors.email}</p>}
             </div>
             
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl md:rounded-2xl py-5 text-base md:text-xl font-bold shadow-lg"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 active:bg-cyan-700 text-white rounded-xl md:rounded-2xl py-5 text-base md:text-xl font-bold shadow-lg min-h-[60px]"
             >
               {isSubmitting ? 'Submitting...' : 'Continue to Step 2 →'}
             </Button>
