@@ -11,7 +11,7 @@ const STORAGE_KEYS = {
 };
 
 // Get auth token from localStorage
-const getToken = () => {
+export const getToken = () => {
   const auth = localStorage.getItem(STORAGE_KEYS.AUTH);
   if (auth) {
     const session = JSON.parse(auth);
