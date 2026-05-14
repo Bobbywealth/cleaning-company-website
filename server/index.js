@@ -7,10 +7,14 @@ import { query, initializeDatabase } from './db.js';
 
 dotenv.config();
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-06-20',
-});
+// Initialize Stripe conditionally (only if API key is available)
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+  : null;
+
+if (!stripe) {
+  console.log('⚠️  Stripe not configured - payment features will be disabled');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -461,6 +465,11 @@ app.post('/api/payments/create-intent', authenticateToken, async (req, res) => {
     
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    // Check if Stripe is configured
+    if (!stripe) {
+      return res.status(503).json({ error: 'Payment processing not configured' });
     }
 
     // Create payment intent with Stripe
