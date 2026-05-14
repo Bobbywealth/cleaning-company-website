@@ -116,11 +116,6 @@ const AdminLogin = () => {
           </button>
         </div>
         
-        <div className="mt-8 p-4 bg-slate-900/50 rounded-2xl border border-white/10">
-          <p className="text-slate-400 text-xs text-center">
-            Demo credentials: <span className="text-cyan-300">admin</span> / <span className="text-cyan-300">360cleaning2026</span>
-          </p>
-        </div>
       </div>
     </div>
   );
