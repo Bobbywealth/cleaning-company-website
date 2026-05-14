@@ -100,10 +100,15 @@ export const AppProvider = ({ children }) => {
     setLoading(false);
   };
 
-  const refreshData = () => {
-    setLeads(getLeads());
-    setJobs(getJobs());
-    setStats(getStats());
+  const refreshData = async () => {
+    const [leadsData, jobsData, statsData] = await Promise.all([
+      getLeads(),
+      getJobs(),
+      getStats()
+    ]);
+    setLeads(leadsData);
+    setJobs(jobsData);
+    setStats(statsData);
   };
 
   const showNotification = (message, type = 'success') => {
