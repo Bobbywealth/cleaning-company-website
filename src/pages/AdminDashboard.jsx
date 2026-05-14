@@ -82,6 +82,83 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {/* Notifications Dropdown */}
+      {showNotifications && (
+        <div className="fixed top-16 right-4 z-50 w-80 max-h-96 overflow-y-auto">
+          <div className={`rounded-2xl shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border border-white/10' : 'bg-white border border-slate-200'}`}>
+            <div className={`px-4 py-3 border-b ${theme === 'dark' ? 'border-white/10' : 'border-slate-200'} flex items-center justify-between`}>
+              <h3 className="font-bold">Notifications</h3>
+              <button 
+                onClick={() => setShowNotifications(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="divide-y divide-white/5">
+              {leads.length === 0 ? (
+                <div className="px-4 py-8 text-center text-slate-400">
+                  <p className="text-4xl mb-2">📭</p>
+                  <p>No notifications yet</p>
+                </div>
+              ) : (
+                <>
+                  {/* New Leads */}
+                  {leads.filter(l => l.status === 'New').length > 0 && (
+                    <div className={`px-4 py-3 ${theme === 'dark' ? 'bg-cyan-400/10' : 'bg-cyan-50'}`}>
+                      <p className="text-sm font-semibold text-cyan-400 flex items-center gap-2">
+                        📬 {leads.filter(l => l.status === 'New').length} New Lead{leads.filter(l => l.status === 'New').length !== 1 ? 's' : ''}
+                      </p>
+                      {leads.filter(l => l.status === 'New').slice(0, 3).map(lead => (
+                        <button
+                          key={lead.id}
+                          onClick={() => {
+                            setSelectedCustomer(lead);
+                            setActiveTab('leads');
+                            setShowNotifications(false);
+                          }}
+                          className={`w-full text-left mt-2 p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-white'} transition`}
+                        >
+                          <p className="font-medium text-sm">{lead.name}</p>
+                          <p className="text-xs text-slate-400">{lead.phone}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Recent Activity */}
+                  <div className="px-4 py-3">
+                    <p className="text-sm font-semibold text-slate-400 mb-2">Recent Activity</p>
+                    {leads.slice(0, 5).map(lead => (
+                      <button
+                        key={lead.id}
+                        onClick={() => {
+                          setSelectedCustomer(lead);
+                          setActiveTab('leads');
+                          setShowNotifications(false);
+                        }}
+                        className={`w-full text-left py-2 ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-slate-100'} rounded-lg transition`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{lead.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            lead.status === 'New' ? 'bg-blue-400/20 text-blue-400' :
+                            lead.status === 'Contacted' ? 'bg-yellow-400/20 text-yellow-400' :
+                            'bg-green-400/20 text-green-400'
+                          }`}>
+                            {lead.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400">{lead.service}</p>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className={`relative z-10 border-b ${theme === 'dark' ? 'border-white/10 bg-slate-950/75' : 'border-slate-200 bg-white'} backdrop-blur-xl sticky top-0`}>
         <div className="max-w-7xl mx-auto px-4 md:px-5 py-3 md:py-4">
