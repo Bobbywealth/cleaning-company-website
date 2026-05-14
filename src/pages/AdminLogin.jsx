@@ -51,7 +51,7 @@ const AdminLogin = () => {
         <div className="absolute bottom-20 right-1/4 h-72 w-72 rounded-full bg-blue-700 blur-3xl" />
       </div>
       
-      <motion.div
+      <div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -121,7 +121,7 @@ const AdminLogin = () => {
             Demo credentials: <span className="text-cyan-300">admin</span> / <span className="text-cyan-300">360cleaning2026</span>
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
