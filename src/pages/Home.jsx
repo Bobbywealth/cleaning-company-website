@@ -65,12 +65,12 @@ const services = [
 const packages = [
   {
     name: "Basic Refresh",
-    price: "From $99",
+    price: "From $120",
     details: ["Kitchen + bathroom wipe-down", "Sweeping and mopping", "Trash removal", "Surface dusting"],
   },
   {
     name: "Deep Clean",
-    price: "From $199",
+    price: "From $260",
     details: ["Full home detail", "Appliance exterior cleaning", "Baseboards", "Interior windows", "High-touch sanitizing"],
     featured: true,
   },
@@ -97,7 +97,7 @@ const counties = [
 const faqs = [
   {
     question: "How much does professional cleaning service cost in New Jersey?",
-    answer: "Our residential cleaning services in New Jersey start from $99 for basic cleaning. Deep cleaning starts at $199. Commercial and specialty services are quoted custom based on your property size and specific needs. Contact us for a free personalized quote for your Essex, Union, Hudson, or Bergen County home or business."
+    answer: "Our residential cleaning services in New Jersey start from $120 for basic cleaning. Deep cleaning starts at $260. Commercial and specialty services are quoted custom based on your property size and specific needs. Contact us for a free personalized quote for your Essex, Union, Hudson, or Bergen County home or business."
   },
   {
     question: "Do you offer both residential and commercial cleaning services in NJ?",
