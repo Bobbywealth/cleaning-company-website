@@ -1,4 +1,4 @@
-# Render Blueprint - Backend API Deployment
+# Render Blueprint - Full Stack Deployment
 # Deploy this file to Render using: render blueprint create
 
 services:
@@ -21,3 +21,23 @@ services:
         value: production
       - key: PORT
         value: 3001
+
+  - type: web
+    name: 360cleaning-frontend
+    env: static
+    region: oregon
+    plan: starter
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: 360cleaning-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NODE_ENV
+        value: production
