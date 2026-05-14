@@ -12,7 +12,11 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
   const [sortBy, setSortBy] = useState('newest');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
   const fileInputRef = useRef(null);
+
+  // Combined search from props + local state
+  const effectiveSearch = searchQuery || localSearch;
 
   // New lead form state
   const [newLead, setNewLead] = useState({
@@ -30,11 +34,11 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
     const matchesStatus = filter === 'all' || lead.status.toLowerCase() === filter.toLowerCase();
     const matchesSource = sourceFilter === 'all' || 
       (lead.lead_source || 'Website') === sourceFilter;
-    const matchesSearch = searchQuery === '' || 
-      (lead.name && lead.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (lead.phone && lead.phone.includes(searchQuery)) ||
-      (lead.email && lead.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (lead.service && lead.service.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = effectiveSearch === '' || 
+      (lead.name && lead.name.toLowerCase().includes(effectiveSearch.toLowerCase())) ||
+      (lead.phone && lead.phone.includes(effectiveSearch)) ||
+      (lead.email && lead.email.toLowerCase().includes(effectiveSearch.toLowerCase())) ||
+      (lead.service && lead.service.toLowerCase().includes(effectiveSearch.toLowerCase()));
     return matchesStatus && matchesSource && matchesSearch;
   });
 
@@ -285,6 +289,26 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
             </span>
           </button>
         ))}
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+        <input
+          type="text"
+          placeholder="Search by name, phone, email, or service..."
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
+          className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm ${theme === 'dark' ? 'bg-white/10 border border-white/10' : 'bg-white border border-slate-200'} outline-none focus:ring-2 focus:ring-cyan-400/50`}
+        />
+        {localSearch && (
+          <button
+            onClick={() => setLocalSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Status Filters */}
