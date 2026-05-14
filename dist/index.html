@@ -175,7 +175,7 @@
           "name": "How much does professional cleaning service cost in New Jersey?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Our residential cleaning services in New Jersey start from $99 for basic cleaning. Deep cleaning starts at $199. Commercial and specialty services are quoted custom based on your property size and specific needs."
+            "text": "Our residential cleaning services in New Jersey start from $99 for basic cleaning. Deep cleaning starts at $199. Commercial and specialty services are quoted custom based on your property size and specific needs. Contact us for a free personalized quote for your Essex, Union, Hudson, or Bergen County home or business."
           }
         },
         {
@@ -183,7 +183,23 @@
           "name": "Do you offer both residential and commercial cleaning services in NJ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! 360 Cleaning Co. offers comprehensive cleaning services for both homes and businesses throughout New Jersey."
+            "text": "Yes! 360 Cleaning Co. offers comprehensive cleaning services for both homes and businesses throughout New Jersey. Our residential services include regular home cleaning, deep cleaning, move-in/move-out cleaning, and apartment cleaning. Our commercial services cover offices, restaurants, retail spaces, and other business properties in Essex, Union, Hudson, and Bergen County."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you bring your own cleaning supplies and equipment?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, our professional cleaning teams in New Jersey arrive with all necessary supplies, equipment, and eco-friendly cleaning products. We use professional-grade cleaners that are effective yet safe for your family, pets, and employees. Just point us to the areas that need attention and we'll handle the rest."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you offer move-in and move-out cleaning services in New Jersey?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Absolutely! We provide comprehensive move-in and move-out cleaning services throughout New Jersey, including deep cleaning of kitchens, bathrooms, all rooms, appliances, and hard-to-reach areas. Our move-out cleaning helps ensure you get your security deposit back, while our move-in cleaning makes your new home fresh and spotless."
           }
         },
         {
@@ -191,7 +207,7 @@
           "name": "What counties and areas of New Jersey do you serve?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "360 Cleaning Co. proudly serves all of New Jersey, with primary coverage in Essex County, Union County, Hudson County, and Bergen County."
+            "text": "360 Cleaning Co. proudly serves all of New Jersey, with primary coverage in Essex County, Union County, Hudson County, and Bergen County. We service cities including Jersey City, Newark, Hoboken, New Brunswick, Trenton, Edison, Paterson, Elizabeth, and all surrounding areas in North Jersey."
           }
         },
         {
@@ -199,7 +215,23 @@
           "name": "How do I get a free cleaning quote in New Jersey?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Getting a free quote is easy! Call us at (862) 285-4949, fill out our online quote form, or use the contact form on our website."
+            "text": "Getting a free quote is easy! You can call us directly at (862) 285-4949, fill out our online quote form, or use the contact form on our website. For the fastest response, call or text us. We typically respond to quote requests within 2 hours during business hours (7AM-8PM, 7 days a week)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you offer recurring or subscription cleaning services in NJ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, we offer flexible recurring cleaning plans for homes and businesses throughout New Jersey. Choose from weekly, bi-weekly, or monthly service to keep your space consistently clean. Many of our Essex, Union, Hudson, and Bergen County customers prefer our recurring plans for ongoing maintenance cleaning."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you clean Airbnb properties and short-term rentals in New Jersey?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! We specialize in Airbnb turnkey cleaning and short-term rental cleaning services throughout New Jersey. We understand the importance of quick turnaround times for hosts in Jersey City, Hoboken, and all NJ vacation rentals. Our team ensures your guests always walk into a spotless, guest-ready space."
           }
         },
         {
@@ -207,7 +239,7 @@
           "name": "Are your NJ cleaning teams licensed and insured?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, 360 Cleaning Co. is fully licensed, bonded, and insured in New Jersey."
+            "text": "Yes, 360 Cleaning Co. is fully licensed, bonded, and insured in New Jersey. All team members undergo thorough background checks and professional training. We're proud to serve homeowners, landlords, real estate agents, and businesses across Essex, Union, Hudson, and Bergen County with peace of mind."
           }
         }
       ]
@@ -220,7 +252,7 @@
       "@context": "https://schema.org",
       "@type": "WebPage",
       "name": "360 Cleaning Co. - Professional Cleaning Services in New Jersey",
-      "description": "Top-rated cleaning company serving Essex, Union, Hudson, and Bergen County NJ.",
+      "description": "Top-rated cleaning company serving Essex, Union, Hudson, and Bergen County NJ. Expert residential, commercial, deep cleaning, move-in/move-out, Airbnb, and restaurant cleaning services.",
       "url": "https://360cleaning.co",
       "isPartOf": {
         "@type": "WebSite",
@@ -230,27 +262,47 @@
     }
     </script>
 
-    <!-- =================== GA4 TRACKING PLACEHOLDER =================== -->
-    <!-- TODO: Replace G-XXXXXXXXXX with your real GA4 Measurement ID -->
-    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> -->
+    <!-- =================== GOOGLE ADS TRACKING =================== -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18159287186"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      // TODO: Uncomment and replace G-XXXXXXXXXX with real GA4 ID
-      // gtag('config', 'G-XXXXXXXXXX');
 
+      gtag('config', 'AW-18159287186');
+
+      // Track quote form submissions
       window.trackQuoteSubmit = function() {
-        if (typeof gtag === 'function') { gtag('event', 'generate_lead', { 'event_category': 'Quote Form', 'event_label': 'New Quote Request' }); }
-        if (typeof fbq === 'function') { fbq('track', 'Lead'); }
+        gtag('event', 'generate_lead', {
+          'event_category': 'Quote Form',
+          'event_label': 'New Quote Request'
+        });
+        if (typeof fbq === 'function') {
+          fbq('track', 'Lead');
+        }
       };
+
+      // Track quote button clicks
       window.trackQuoteClick = function() {
-        if (typeof gtag === 'function') { gtag('event', 'select_content', { 'content_type': 'quote_button', 'event_label': 'Get Quote Click' }); }
-        if (typeof fbq === 'function') { fbq('track', 'Click'); }
+        gtag('event', 'select_content', {
+          'content_type': 'quote_button',
+          'event_label': 'Get Quote Click'
+        });
+        if (typeof fbq === 'function') {
+          fbq('track', 'Click');
+        }
       };
+
+      // Track phone clicks
       window.trackPhoneClick = function() {
-        if (typeof gtag === 'function') { gtag('event', 'click', { 'event_category': 'Contact', 'event_label': 'Phone Call Click' }); }
-        if (typeof fbq === 'function') { fbq('track', 'Contact'); }
+        gtag('event', 'click', {
+          'event_category': 'Contact',
+          'event_label': 'Phone Call Click'
+        });
+        if (typeof fbq === 'function') {
+          fbq('track', 'Contact');
+        }
       };
     </script>
 
@@ -272,8 +324,8 @@
     <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=XXXXXXXXXXXXXXXX&ev=PageView&noscript=1" /></noscript>
     -->
 
-    <script type="module" crossorigin src="/assets/index-De-ynzX0.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Ch30jLUN.css">
+    <script type="module" crossorigin src="/assets/index-CB4JEcg6.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DHWySxHv.css">
   </head>
   <body>
     <div id="root"></div>
