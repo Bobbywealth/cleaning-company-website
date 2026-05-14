@@ -32,33 +32,21 @@ export const AppProvider = ({ children }) => {
   const [crewMembers, setCrewMembers] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('crewMembers');
-      return saved ? JSON.parse(saved) : [
-        { id: 1, name: 'Mike Johnson', role: 'Lead Cleaner', phone: '(862) 555-0101', email: 'mike@360cleaning.com', status: 'available', jobsToday: 2, avatar: 'M' },
-        { id: 2, name: 'Sarah Davis', role: 'Cleaner', phone: '(862) 555-0102', email: 'sarah@360cleaning.com', status: 'available', jobsToday: 1, avatar: 'S' },
-        { id: 3, name: 'James Wilson', role: 'Cleaner', phone: '(862) 555-0103', email: 'james@360cleaning.com', status: 'busy', jobsToday: 3, avatar: 'J' },
-        { id: 4, name: 'Emily Brown', role: 'Lead Cleaner', phone: '(862) 555-0104', email: 'emily@360cleaning.com', status: 'available', jobsToday: 2, avatar: 'E' },
-      ];
+      return saved ? JSON.parse(saved) : [];
     }
     return [];
   });
   const [invoices, setInvoices] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('invoices');
-      return saved ? JSON.parse(saved) : [
-        { id: 'INV-001', client: 'John Smith', email: 'john@email.com', amount: 250, status: 'paid', date: '2026-05-01', dueDate: '2026-05-15' },
-        { id: 'INV-002', client: 'Sarah Johnson', email: 'sarah@email.com', amount: 180, status: 'pending', date: '2026-05-03', dueDate: '2026-05-17' },
-        { id: 'INV-003', client: 'Mike Davis', email: 'mike@email.com', amount: 320, status: 'overdue', date: '2026-04-25', dueDate: '2026-05-09' },
-      ];
+      return saved ? JSON.parse(saved) : [];
     }
     return [];
   });
   const [recurringClients, setRecurringClients] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('recurringClients');
-      return saved ? JSON.parse(saved) : [
-        { id: 1, name: 'John Smith', phone: '(862) 555-1001', email: 'john@email.com', plan: 'premium', frequency: 'weekly', price: 180, nextDate: '2026-05-15', status: 'active' },
-        { id: 2, name: 'Sarah Johnson', phone: '(862) 555-1002', email: 'sarah@email.com', plan: 'standard', frequency: 'biweekly', price: 150, nextDate: '2026-05-18', status: 'active' },
-      ];
+      return saved ? JSON.parse(saved) : [];
     }
     return [];
   });

@@ -206,6 +206,69 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                           <span>🧹</span> {lead.service}
                         </span>
                       </div>
+                      
+                      {/* Property Details Section */}
+                      {(lead.propertySize || lead.bathrooms || lead.frequency || lead.county || lead.addOns?.length > 0 || lead.estimatedLow) && (
+                        <div className={`mt-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-100'}`}>
+                          <p className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                            📋 PROPERTY DETAILS
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            {lead.propertySize && (
+                              <div className="flex items-center gap-2">
+                                <span className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>🏠</span>
+                                <span>{lead.propertySize}</span>
+                              </div>
+                            )}
+                            {lead.bathrooms && (
+                              <div className="flex items-center gap-2">
+                                <span className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>🚿</span>
+                                <span>{lead.bathrooms} {parseFloat(lead.bathrooms) === 1 ? 'bathroom' : 'bathrooms'}</span>
+                              </div>
+                            )}
+                            {lead.frequency && (
+                              <div className="flex items-center gap-2">
+                                <span className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>🔄</span>
+                                <span>{lead.frequency}</span>
+                              </div>
+                            )}
+                            {lead.county && (
+                              <div className="flex items-center gap-2">
+                                <span className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>📍</span>
+                                <span>{lead.county}</span>
+                              </div>
+                            )}
+                            {lead.cityArea && lead.cityArea !== 'Other' && (
+                              <div className="flex items-center gap-2 col-span-2">
+                                <span className={theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>🏘️</span>
+                                <span>{lead.cityArea}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Add-ons */}
+                          {lead.addOns?.length > 0 && (
+                            <div className="mt-2">
+                              <span className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Add-ons: </span>
+                              <span className="text-sm">{lead.addOns.join(', ')}</span>
+                            </div>
+                          )}
+                          
+                          {/* Quote Estimate */}
+                          {lead.estimatedLow && lead.estimatedHigh && (
+                            <div className="mt-3 pt-2 border-t border-white/10">
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                                  💰 ESTIMATED QUOTE
+                                </span>
+                                <span className={`text-lg font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                                  ${lead.estimatedLow} - ${lead.estimatedHigh}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {lead.notes && (
                         <p className={`mt-2 text-sm italic ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                           "{lead.notes}"

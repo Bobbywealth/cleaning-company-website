@@ -49,24 +49,7 @@ const apiRequest = async (endpoint, options = {}) => {
 
 // Initialize demo data for demo mode
 export const initializeDemoData = () => {
-  if (!localStorage.getItem(STORAGE_KEYS.JOBS)) {
-    const demoJobs = [
-      { id: 1, client: "Johnson Residence", service: "Deep Clean", date: "Today, 10:00 AM", status: "Confirmed", phone: "(862) 285-4949", email: "johnson@email.com" },
-      { id: 2, client: "Bright Dental Office", service: "Commercial", date: "Today, 7:00 PM", status: "Scheduled", phone: "(555) 234-5678", email: "brightdental@office.com" },
-      { id: 3, client: "Miller Apartment", service: "Move-Out", date: "Tomorrow, 1:30 PM", status: "Pending", phone: "(555) 345-6789", email: "miller@email.com" }
-    ];
-    localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(demoJobs));
-  }
-  
-  if (!localStorage.getItem(STORAGE_KEYS.LEADS)) {
-    const demoLeads = [
-      { id: 1, name: "Sarah Johnson", phone: "(555) 111-2222", email: "sarah.j@email.com", service: "Deep Cleaning", notes: "3 bedroom house, need carpet cleaning too", createdAt: new Date().toISOString(), status: "New" },
-      { id: 2, name: "Mike Chen", phone: "(555) 222-3333", email: "mchen@business.com", service: "Commercial Cleaning", notes: "Office building, 5000 sqft, need daily service", createdAt: new Date(Date.now() - 86400000).toISOString(), status: "Contacted" }
-    ];
-    localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(demoLeads));
-  }
-  
-  // Set default admin credentials
+  // Set default admin credentials if not set
   if (!localStorage.getItem(STORAGE_KEYS.ADMIN)) {
     const admin = {
       username: "admin",

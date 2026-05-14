@@ -3,47 +3,90 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useApp } from '@/context/AppContext';
 
 const Reports = ({ theme = 'dark' }) => {
-  const { leads, jobs } = useApp();
+  const { leads, jobs, invoices } = useApp();
   const [dateRange, setDateRange] = useState('30');
 
   const convertedLeads = leads.filter(l => l.status === 'Converted');
   const conversionRate = leads.length > 0 ? Math.round((convertedLeads.length / leads.length) * 100) : 0;
 
-  // Calculate weekly data for chart
+  // Calculate total revenue from paid invoices
+  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
+  
+  // Calculate average revenue per job from actual data
+  const completedJobs = jobs.filter(j => j.status === 'Completed');
+  const avgRevenuePerJob = completedJobs.length > 0 ? Math.round(totalRevenue / completedJobs.length) : 0;
+  
+  // Calculate average jobs per day (based on completed jobs over the date range)
+  const daysInRange = parseInt(dateRange);
+  const avgJobsPerDay = completedJobs.length > 0 ? (completedJobs.length / daysInRange).toFixed(1) : 0;
+
+  // Calculate service breakdown from real leads
+  const serviceCounts = {};
+  leads.forEach(lead => {
+    const service = lead.service || 'Other';
+    serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+  });
+  
+  const serviceBreakdown = Object.entries(serviceCounts).map(([service, count], idx) => ({
+    service,
+    count,
+    percentage: leads.length > 0 ? Math.round((count / leads.length) * 100) : 0,
+    color: ['bg-cyan-400', 'bg-blue-400', 'bg-purple-400', 'bg-green-400', 'bg-yellow-400', 'bg-pink-400', 'bg-indigo-400'][idx % 7]
+  }));
+
+  // Calculate busiest days from jobs
+  const dayCounts = { 'Sunday': 0, 'Monday': 0, 'Tuesday': 0, 'Wednesday': 0, 'Thursday': 0, 'Friday': 0, 'Saturday': 0 };
+  jobs.forEach(job => {
+    if (job.date) {
+      const day = new Date(job.date).toLocaleDateString('en-US', { weekday: 'long' });
+      if (dayCounts.hasOwnProperty(day)) {
+        dayCounts[day]++;
+      }
+    }
+  });
+  
+  const topDays = Object.entries(dayCounts)
+    .filter(([_, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([day, count]) => ({ day, jobs: count }));
+
+  // Calculate weekly data from real jobs
   const generateWeeklyData = () => {
     const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    return weeks.map((week, i) => ({
-      week,
-      leads: Math.floor(Math.random() * 10) + 5,
-      jobs: Math.floor(Math.random() * 8) + 3,
-      revenue: Math.floor(Math.random() * 2000) + 1000
-    }));
+    const now = new Date();
+    
+    return weeks.map((week, i) => {
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - ((3 - i + 1) * 7));
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 7);
+      
+      const weekLeads = leads.filter(l => {
+        const created = new Date(l.createdAt);
+        return created >= weekStart && created < weekEnd;
+      }).length;
+      
+      const weekJobs = jobs.filter(j => {
+        const jobDate = new Date(j.date);
+        return jobDate >= weekStart && jobDate < weekEnd;
+      }).length;
+      
+      const weekRevenue = invoices.filter(i => {
+        const invDate = new Date(i.date);
+        return invDate >= weekStart && invDate < weekEnd && i.status === 'paid';
+      }).reduce((sum, i) => sum + i.amount, 0);
+      
+      return {
+        week,
+        leads: weekLeads,
+        jobs: weekJobs,
+        revenue: weekRevenue
+      };
+    });
   };
 
   const weeklyData = generateWeeklyData();
-
-  // Calculate service breakdown
-  const serviceBreakdown = [
-    { service: 'Standard Clean', count: 45, percentage: 35, color: 'bg-cyan-400' },
-    { service: 'Deep Clean', count: 32, percentage: 25, color: 'bg-blue-400' },
-    { service: 'Move In/Out', count: 22, percentage: 17, color: 'bg-purple-400' },
-    { service: 'Office Clean', count: 18, percentage: 14, color: 'bg-green-400' },
-    { service: 'Other', count: 11, percentage: 9, color: 'bg-yellow-400' },
-  ];
-
-  // Top performing days
-  const topDays = [
-    { day: 'Tuesday', jobs: 28 },
-    { day: 'Wednesday', jobs: 24 },
-    { day: 'Thursday', jobs: 22 },
-    { day: 'Saturday', jobs: 18 },
-    { day: 'Monday', jobs: 15 },
-  ];
-
-  // Calculate metrics
-  const avgJobsPerDay = 12;
-  const avgRevenuePerJob = 185;
-  const totalRevenue = convertedLeads.length * avgRevenuePerJob * 3;
 
   return (
     <div className="space-y-6">
@@ -73,28 +116,24 @@ const Reports = ({ theme = 'dark' }) => {
           <CardContent className="p-4 text-center">
             <p className={`text-3xl font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>{leads.length}</p>
             <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Total Leads</p>
-            <p className="text-xs text-green-400 mt-1">+12% vs last period</p>
           </CardContent>
         </Card>
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
           <CardContent className="p-4 text-center">
             <p className={`text-3xl font-black ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>{conversionRate}%</p>
             <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Conversion Rate</p>
-            <p className="text-xs text-green-400 mt-1">+5% vs last period</p>
           </CardContent>
         </Card>
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
           <CardContent className="p-4 text-center">
             <p className={`text-3xl font-black ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}>{jobs.length}</p>
             <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Jobs Completed</p>
-            <p className="text-xs text-green-400 mt-1">+8% vs last period</p>
           </CardContent>
         </Card>
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
           <CardContent className="p-4 text-center">
             <p className={`text-3xl font-black ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>${totalRevenue}</p>
             <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Total Revenue</p>
-            <p className="text-xs text-green-400 mt-1">+15% vs last period</p>
           </CardContent>
         </Card>
       </div>

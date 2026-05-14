@@ -81,6 +81,7 @@ const CustomerProfile = ({ customer, onClose, theme = 'dark' }) => {
       <div className={`flex border-b ${theme === 'dark' ? 'border-white/10' : 'border-slate-200'}`}>
         {[
           { key: 'details', label: 'Details', icon: '👤' },
+          { key: 'property', label: 'Property', icon: '🏠' },
           { key: 'jobs', label: 'Jobs', icon: '📅', count: customerJobs.length },
           { key: 'notes', label: 'Notes', icon: '📝', count: notes.length },
         ].map(tab => (
@@ -211,6 +212,117 @@ const CustomerProfile = ({ customer, onClose, theme = 'dark' }) => {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'property' && (
+          <div className="space-y-6">
+            {/* Quote Estimate - Prominent Display */}
+            {customer.estimatedLow && customer.estimatedHigh && (
+              <div className={`p-6 rounded-2xl ${theme === 'dark' ? 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20' : 'bg-gradient-to-br from-cyan-100 to-blue-100'}`}>
+                <p className={`text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                  💰 ESTIMATED QUOTE
+                </p>
+                <p className={`text-4xl font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                  ${customer.estimatedLow} - ${customer.estimatedHigh}
+                </p>
+                <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Based on the property details provided
+                </p>
+              </div>
+            )}
+
+            {/* Property Details */}
+            <div>
+              <h3 className={`text-sm font-semibold mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                PROPERTY INFORMATION
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`flex items-center gap-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                  <span className="text-xl">🏠</span>
+                  <div>
+                    <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Property Size</p>
+                    <p className="font-semibold">{customer.propertySize || 'Not specified'}</p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                  <span className="text-xl">🚿</span>
+                  <div>
+                    <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Bathrooms</p>
+                    <p className="font-semibold">{customer.bathrooms || 'Not specified'}</p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                  <span className="text-xl">🔄</span>
+                  <div>
+                    <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Frequency</p>
+                    <p className="font-semibold">{customer.frequency || 'One-time'}</p>
+                  </div>
+                </div>
+                <div className={`flex items-center gap-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                  <span className="text-xl">📍</span>
+                  <div>
+                    <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>County</p>
+                    <p className="font-semibold">{customer.county || 'Not specified'}</p>
+                  </div>
+                </div>
+                {customer.cityArea && customer.cityArea !== 'Other' && (
+                  <div className={`flex items-center gap-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                    <span className="text-xl">🏘️</span>
+                    <div>
+                      <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>City/Area</p>
+                      <p className="font-semibold">{customer.cityArea}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Add-ons */}
+            {customer.addOns && customer.addOns.length > 0 && (
+              <div>
+                <h3 className={`text-sm font-semibold mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  SELECTED ADD-ONS
+                </h3>
+                <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                  <div className="flex flex-wrap gap-2">
+                    {customer.addOns.map((addon, idx) => (
+                      <span 
+                        key={idx}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium ${theme === 'dark' ? 'bg-cyan-400/20 text-cyan-400' : 'bg-cyan-100 text-cyan-700'}`}
+                      >
+                        ✓ {addon}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Special Requests / Notes */}
+            {(customer.specialRequests || (customer.notes && !customer.propertySize)) && (
+              <div>
+                <h3 className={`text-sm font-semibold mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  SPECIAL REQUESTS
+                </h3>
+                <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                  <p className="whitespace-pre-wrap">{customer.specialRequests || customer.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* No Property Data */}
+            {!customer.propertySize && !customer.estimatedLow && (!customer.addOns || customer.addOns.length === 0) && (
+              <div className={`text-center py-12 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                <p className="text-4xl mb-4">🏠</p>
+                <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>
+                  No property details available yet
+                </p>
+                <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Property information will appear here once the customer completes Step 2
+                </p>
+              </div>
+            )}
           </div>
         )}
 
