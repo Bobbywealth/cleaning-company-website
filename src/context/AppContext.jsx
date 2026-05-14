@@ -113,7 +113,7 @@ export const AppProvider = ({ children }) => {
 
   // Auth functions
   const login = async (username, password) => {
-    const result = apiLogin(username, password);
+    const result = await apiLogin(username, password);
     if (result.success) {
       setUser({ username: result.user.username, isAuthenticated: true });
     }
