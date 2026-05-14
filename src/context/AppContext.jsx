@@ -4,6 +4,7 @@ import {
   addLead, 
   updateLeadStatus, 
   deleteLead,
+  updateLead,
   getJobs, 
   addJob, 
   updateJob, 
@@ -149,6 +150,11 @@ export const AppProvider = ({ children }) => {
     showNotification('Lead deleted');
   };
 
+  const updateLeadData = (id, updates) => {
+    updateLead(id, updates);
+    refreshData();
+  };
+
   // Job functions
   const createJob = (jobData) => {
     const newJob = addJob(jobData);
@@ -261,6 +267,7 @@ export const AppProvider = ({ children }) => {
     markLeadContacted,
     markLeadConverted,
     removeLead,
+    updateLeadData,
     createJob,
     updateJobStatus,
     removeJob,

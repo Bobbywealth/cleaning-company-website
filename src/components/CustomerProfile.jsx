@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 
 const CustomerProfile = ({ customer, onClose, theme = 'dark' }) => {
-  const { jobs, markLeadContacted, markLeadConverted, removeLead } = useApp();
+  const { jobs, markLeadContacted, markLeadConverted, removeLead, updateLeadData } = useApp();
   const [activeTab, setActiveTab] = useState('details');
   const [newNote, setNewNote] = useState('');
-  const [notes, setNotes] = useState(customer.notes ? [customer.notes] : []);
+  const [notes, setNotes] = useState(customer.notes ? (typeof customer.notes === 'string' ? [customer.notes] : customer.notes) : []);
 
   // Get customer's jobs
   const customerJobs = jobs.filter(job => 
@@ -16,7 +16,10 @@ const CustomerProfile = ({ customer, onClose, theme = 'dark' }) => {
 
   const addNote = () => {
     if (newNote.trim()) {
-      setNotes([...notes, newNote.trim()]);
+      const updatedNotes = [...notes, newNote.trim()];
+      setNotes(updatedNotes);
+      // Save to backend/localStorage
+      updateLeadData(customer.id, { notes: updatedNotes });
       setNewNote('');
     }
   };

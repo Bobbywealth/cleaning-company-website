@@ -134,6 +134,32 @@ export const deleteLead = async (id) => {
   }
 };
 
+export const updateLead = async (id, updates) => {
+  try {
+    // First get the lead to update all fields
+    const leads = await getLeads();
+    const lead = leads.find(l => l.id === id || l.id === parseInt(id));
+    if (lead) {
+      return await apiRequest(`/api/leads/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...lead, ...updates }),
+      });
+    }
+    return null;
+  } catch (error) {
+    // Fallback to localStorage if backend is unavailable
+    console.log('Backend unavailable, using localStorage for updateLead');
+    const leads = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEADS) || '[]');
+    const index = leads.findIndex(l => l.id === id || l.id === parseInt(id));
+    if (index !== -1) {
+      leads[index] = { ...leads[index], ...updates };
+      localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(leads));
+      return leads[index];
+    }
+    return null;
+  }
+};
+
 // ============ JOBS API (Connected to Backend) ============
 
 export const getJobs = async () => {
