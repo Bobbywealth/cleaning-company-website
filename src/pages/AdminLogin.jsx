@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-const motion = { div: 'div' };
+import { motion } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 
