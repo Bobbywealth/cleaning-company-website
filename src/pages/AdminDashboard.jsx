@@ -1,7 +1,6 @@
-// Admin Dashboard - Fixed framer-motion import
+// Admin Dashboard - Using plain divs for reliability
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
@@ -77,18 +76,11 @@ const AdminDashboard = () => {
       </div>
 
       {/* Notification Toast */}
-      <AnimatePresence>
-        {notification && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-4 left-1/2 z-50 bg-cyan-400 text-slate-950 px-6 py-3 rounded-2xl font-semibold shadow-lg flex items-center gap-2"
-          >
-            <span>🔔</span> {notification.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {notification && (
+        <div className="fixed top-4 left-1/2 z-50 bg-cyan-400 text-slate-950 px-6 py-3 rounded-2xl font-semibold shadow-lg flex items-center gap-2" style={{transform: 'translateX(-50%)'}}>
+          <span>🔔</span> {notification.message}
+        </div>
+      )}
 
       {/* Header */}
       <header className={`relative z-10 border-b ${theme === 'dark' ? 'border-white/10 bg-slate-950/75' : 'border-slate-200 bg-white'} backdrop-blur-xl sticky top-0`}>
@@ -215,7 +207,7 @@ const AdminDashboard = () => {
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -418,12 +410,12 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Leads Tab */}
         {activeTab === 'leads' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -437,12 +429,12 @@ const AdminDashboard = () => {
                 />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Jobs Tab */}
         {activeTab === 'jobs' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -452,12 +444,12 @@ const AdminDashboard = () => {
                 <JobsManager theme={theme} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Customers Tab */}
         {activeTab === 'customers' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -492,23 +484,23 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Marketing Tab */}
         {activeTab === 'marketing' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
             <MarketingCenter theme={theme} />
-          </motion.div>
+          </div>
         )}
 
         {/* Recurring Tab */}
         {activeTab === 'recurring' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -518,12 +510,12 @@ const AdminDashboard = () => {
                 <RecurringClients theme={theme} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Crew Tab */}
         {activeTab === 'crew' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -533,12 +525,12 @@ const AdminDashboard = () => {
                 <CrewManagement theme={theme} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Invoices Tab */}
         {activeTab === 'invoices' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -548,12 +540,12 @@ const AdminDashboard = () => {
                 <Invoices theme={theme} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Reports Tab */}
         {activeTab === 'reports' && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
@@ -563,21 +555,21 @@ const AdminDashboard = () => {
                 <Reports theme={theme} />
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
       </main>
 
       {/* Customer Profile Modal */}
       <AnimatePresence>
         {selectedCustomer && (
-          <motion.div
+          <div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
             onClick={() => setSelectedCustomer(null)}
           >
-            <motion.div
+            <div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -589,8 +581,8 @@ const AdminDashboard = () => {
                 onClose={() => setSelectedCustomer(null)}
                 theme={theme}
               />
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
