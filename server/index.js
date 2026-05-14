@@ -90,18 +90,59 @@ app.get('/api/leads', authenticateToken, async (req, res) => {
 
 app.post('/api/leads', async (req, res) => {
   try {
-    const { name, phone, email, service, notes } = req.body;
+    const { name, phone, email, service, notes, lead_source, business_type, address } = req.body;
     
     const result = await query(
-      `INSERT INTO leads (name, phone, email, service, notes) 
-       VALUES ($1, $2, $3, $4, $5) 
+      `INSERT INTO leads (name, phone, email, service, notes, lead_source, business_type, address) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
        RETURNING *`,
-      [name, phone, email, service, notes]
+      [name, phone, email, service, notes, lead_source || 'Website', business_type, address]
     );
     
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Create lead error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Bulk import leads from CSV
+app.post('/api/leads/bulk', authenticateToken, async (req, res) => {
+  try {
+    const { leads } = req.body;
+    
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return res.status(400).json({ error: 'No leads provided' });
+    }
+
+    const insertedLeads = [];
+    for (const lead of leads) {
+      const result = await query(
+        `INSERT INTO leads (name, phone, email, service, notes, lead_source, business_type, address, status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+         RETURNING *`,
+        [
+          lead.name || '', 
+          lead.phone || '', 
+          lead.email || '', 
+          lead.service || 'Commercial Cleaning',
+          lead.notes || '',
+          lead.lead_source || 'Cold Call',
+          lead.business_type || '',
+          lead.address || '',
+          'New'
+        ]
+      );
+      insertedLeads.push(result.rows[0]);
+    }
+    
+    res.status(201).json({ 
+      success: true, 
+      count: insertedLeads.length,
+      leads: insertedLeads
+    });
+  } catch (error) {
+    console.error('Bulk import error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -206,8 +206,21 @@ const ThankYouPage = () => {
         </section>
 
         {/* Footer */}
-        <footer className="bg-slate-900 text-slate-400 py-4 md:py-6 px-4 md:px-6 text-center text-xs md:text-sm">
-          <p>© 2026 360 Cleaning Co. All rights reserved. | New Jersey</p>
+        <footer className="bg-slate-900 text-slate-400 py-4 md:py-6 px-4 md:px-6">
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img 
+                src="https://iili.io/Btud5oF.th.png" 
+                alt="360 Cleaning Co." 
+                className="h-10 w-10 rounded-lg object-cover border border-white/10" 
+              />
+              <div>
+                <p className="font-bold text-white text-sm">360 Cleaning Co.</p>
+                <p className="text-xs text-cyan-400">New Jersey</p>
+              </div>
+            </div>
+            <p className="text-xs md:text-sm">© 2026 360 Cleaning Co. All rights reserved.</p>
+          </div>
         </footer>
       </main>
     </div>

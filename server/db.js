@@ -23,11 +23,23 @@ export const initializeDatabase = async () => {
         service VARCHAR(100),
         notes TEXT,
         status VARCHAR(50) DEFAULT 'New',
+        lead_source VARCHAR(50) DEFAULT 'Website',
+        business_type VARCHAR(100),
+        address TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('✓ Leads table ready');
+
+    // Add columns if they don't exist (for existing databases)
+    try {
+      await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_source VARCHAR(50) DEFAULT 'Website'`);
+      await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS business_type VARCHAR(100)`);
+      await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS address TEXT`);
+    } catch (e) {
+      // Columns may already exist, ignore
+    }
 
     // Create jobs table
     await pool.query(`

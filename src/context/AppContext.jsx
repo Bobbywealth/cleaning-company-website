@@ -118,7 +118,12 @@ export const AppProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Lead functions
+  // Lead functions - local state update for immediate UI feedback
+  const addLead = (leadData) => {
+    setLeads(prev => [leadData, ...prev]);
+    return leadData;
+  };
+
   const submitLead = (leadData) => {
     const newLead = addLead(leadData);
     refreshData();
