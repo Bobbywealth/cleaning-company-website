@@ -37,7 +37,8 @@ import {
   AlertCircle,
   Info,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  HelpCircle
 } from 'lucide-react';
 
 const LeadsList = lazy(() => import('@/components/LeadsList'));
