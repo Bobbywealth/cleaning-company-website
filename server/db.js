@@ -210,6 +210,38 @@ export const initializeDatabase = async () => {
     `);
     console.log('✓ Audit log table ready');
 
+    // Create walkthrough_appointments table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS walkthrough_appointments (
+        id SERIAL PRIMARY KEY,
+        lead_id INTEGER REFERENCES leads(id) ON DELETE CASCADE,
+        scheduled_date DATE NOT NULL,
+        scheduled_time TIME NOT NULL,
+        duration_minutes INTEGER DEFAULT 60,
+        address TEXT,
+        service_type VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'Scheduled',
+        notes TEXT,
+        outcome TEXT,
+        quote_amount DECIMAL(10,2),
+        follow_up_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by VARCHAR(100)
+      )
+    `);
+    console.log('✓ Walkthrough appointments table ready');
+
+    // Add columns if they don't exist (for existing databases)
+    try {
+      await pool.query(`ALTER TABLE walkthrough_appointments ADD COLUMN IF NOT EXISTS quote_amount DECIMAL(10,2)`);
+      await pool.query(`ALTER TABLE walkthrough_appointments ADD COLUMN IF NOT EXISTS outcome TEXT`);
+      await pool.query(`ALTER TABLE walkthrough_appointments ADD COLUMN IF NOT EXISTS follow_up_date DATE`);
+      await pool.query(`ALTER TABLE walkthrough_appointments ADD COLUMN IF NOT EXISTS service_type VARCHAR(100)`);
+    } catch (e) {
+      // Columns may already exist, ignore
+    }
+
     // Insert default SMS sequences for lead nurturing
     const smsSeqExists = await pool.query("SELECT id FROM sms_sequences LIMIT 1");
     if (smsSeqExists.rows.length === 0) {

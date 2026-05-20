@@ -666,6 +666,188 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), asy
   res.json({ received: true });
 });
 
+// ============ WALKTHROUGH APPOINTMENTS ROUTES ============
+app.get('/api/walkthroughs', authenticateToken, async (req, res) => {
+  try {
+    const { date, status, lead_id } = req.query;
+    let query_str = `
+      SELECT wa.*, l.name as lead_name, l.phone as lead_phone, l.email as lead_email, l.service as lead_service
+      FROM walkthrough_appointments wa
+      LEFT JOIN leads l ON wa.lead_id = l.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (date) {
+      params.push(date);
+      query_str += ` AND wa.scheduled_date = $${params.length}`;
+    }
+    if (status) {
+      params.push(status);
+      query_str += ` AND wa.status = $${params.length}`;
+    }
+    if (lead_id) {
+      params.push(lead_id);
+      query_str += ` AND wa.lead_id = $${params.length}`;
+    }
+
+    query_str += ' ORDER BY wa.scheduled_date ASC, wa.scheduled_time ASC';
+
+    const result = await query(query_str, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get walkthroughs error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/walkthroughs', authenticateToken, async (req, res) => {
+  try {
+    const { lead_id, scheduled_date, scheduled_time, duration_minutes, address, service_type, notes } = req.body;
+
+    const result = await query(
+      `INSERT INTO walkthrough_appointments (lead_id, scheduled_date, scheduled_time, duration_minutes, address, service_type, notes, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [lead_id, scheduled_date, scheduled_time, duration_minutes || 60, address, service_type, notes, req.user.username]
+    );
+
+    // Auto-update lead status to "Walkthrough Scheduled"
+    if (lead_id) {
+      await query(
+        `UPDATE leads SET status = 'Walkthrough Scheduled', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [lead_id]
+      );
+    }
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create walkthrough error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/walkthroughs/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { scheduled_date, scheduled_time, duration_minutes, address, service_type, status, notes, outcome, quote_amount, follow_up_date } = req.body;
+
+    const result = await query(
+      `UPDATE walkthrough_appointments
+       SET scheduled_date = COALESCE($1, scheduled_date),
+           scheduled_time = COALESCE($2, scheduled_time),
+           duration_minutes = COALESCE($3, duration_minutes),
+           address = COALESCE($4, address),
+           service_type = COALESCE($5, service_type),
+           status = COALESCE($6, status),
+           notes = COALESCE($7, notes),
+           outcome = COALESCE($8, outcome),
+           quote_amount = COALESCE($9, quote_amount),
+           follow_up_date = COALESCE($10, follow_up_date),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $11
+       RETURNING *`,
+      [scheduled_date, scheduled_time, duration_minutes, address, service_type, status, notes, outcome, quote_amount, follow_up_date, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Walkthrough not found' });
+    }
+
+    // Auto-update lead status based on walkthrough status
+    const walkthrough = result.rows[0];
+    if (walkthrough.lead_id) {
+      let newLeadStatus = null;
+      if (status === 'Completed' || status === 'Converted') {
+        newLeadStatus = 'Quote Provided';
+      } else if (status === 'Cancelled' || status === 'No-Show') {
+        newLeadStatus = 'Contacted';
+      }
+
+      if (newLeadStatus) {
+        await query(
+          `UPDATE leads SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+          [newLeadStatus, walkthrough.lead_id]
+        );
+      }
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update walkthrough error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/walkthroughs/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM walkthrough_appointments WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete walkthrough error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/walkthroughs/check-conflict', authenticateToken, async (req, res) => {
+  try {
+    const { date, time, duration_minutes, exclude_id } = req.query;
+
+    if (!date || !time) {
+      return res.status(400).json({ error: 'Date and time are required' });
+    }
+
+    const duration = parseInt(duration_minutes) || 60;
+
+    // Get all walkthroughs on the same date
+    let query_str = `
+      SELECT * FROM walkthrough_appointments
+      WHERE scheduled_date = $1 AND status NOT IN ('Cancelled', 'No-Show')
+    `;
+    const params = [date];
+
+    if (exclude_id) {
+      params.push(exclude_id);
+      query_str += ` AND id != $${params.length}`;
+    }
+
+    const result = await query(query_str, params);
+
+    // Check for time conflicts
+    const requestedStart = timeToMinutes(time);
+    const requestedEnd = requestedStart + duration;
+
+    for (const appt of result.rows) {
+      const apptStart = timeToMinutes(appt.scheduled_time);
+      const apptEnd = apptStart + (appt.duration_minutes || 60);
+
+      // Check overlap
+      if (requestedStart < apptEnd && requestedEnd > apptStart) {
+        return res.json({
+          hasConflict: true,
+          conflictingAppointment: appt
+        });
+      }
+    }
+
+    res.json({ hasConflict: false });
+  } catch (error) {
+    console.error('Check conflict error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Helper function to convert time string to minutes
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [time, period] = timeStr.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
 // ============ STATS ROUTE ============
 app.get('/api/stats', authenticateToken, async (req, res) => {
   try {
@@ -674,6 +856,10 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
     const jobsResult = await query('SELECT COUNT(*) as total FROM jobs');
     const bookedJobsResult = await query("SELECT COUNT(*) as total FROM jobs WHERE status IN ('Confirmed', 'Scheduled')");
     const completedJobsResult = await query("SELECT COUNT(*) as total FROM jobs WHERE status = 'Completed'");
+
+    const today = new Date().toISOString().split('T')[0];
+    const walkthroughsResult = await query("SELECT COUNT(*) as total FROM walkthrough_appointments WHERE scheduled_date = $1 AND status NOT IN ('Cancelled', 'No-Show')", [today]);
+    const scheduledWalkthroughsResult = await query("SELECT COUNT(*) as total FROM walkthrough_appointments WHERE status IN ('Scheduled', 'Confirmed')");
 
     const totalLeads = parseInt(leadsResult.rows[0].total);
     const totalJobs = parseInt(jobsResult.rows[0].total);
@@ -685,7 +871,9 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
       totalJobs,
       completedJobs,
       totalLeads,
-      completionRate: totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0
+      completionRate: totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0,
+      todayWalkthroughs: parseInt(walkthroughsResult.rows[0].total),
+      scheduledWalkthroughs: parseInt(scheduledWalkthroughsResult.rows[0].total)
     });
   } catch (error) {
     console.error('Get stats error:', error);
@@ -1230,9 +1418,23 @@ app.get('/api/stats/extended', authenticateToken, async (req, res) => {
         COUNT(*) as total_leads,
         COUNT(CASE WHEN status = 'New' THEN 1 END) as new_leads,
         COUNT(CASE WHEN status = 'Contacted' THEN 1 END) as contacted_leads,
+        COUNT(CASE WHEN status = 'Walkthrough Scheduled' THEN 1 END) as walkthrough_scheduled_leads,
+        COUNT(CASE WHEN status = 'Quote Provided' THEN 1 END) as quote_provided_leads,
         COUNT(CASE WHEN status = 'Converted' THEN 1 END) as converted_leads
       FROM leads
     `);
+
+    // Walkthrough stats
+    const walkthroughsResult = await query(`
+      SELECT
+        COUNT(*) as total_walkthroughs,
+        COUNT(CASE WHEN status = 'Scheduled' OR status = 'Confirmed' THEN 1 END) as upcoming_walkthroughs,
+        COUNT(CASE WHEN status = 'Completed' THEN 1 END) as completed_walkthroughs,
+        COUNT(CASE WHEN status = 'No-Show' THEN 1 END) as no_show_walkthroughs,
+        COUNT(CASE WHEN status = 'Converted' THEN 1 END) as converted_walkthroughs,
+        COUNT(CASE WHEN scheduled_date = $1 THEN 1 END) as today_walkthroughs
+      FROM walkthrough_appointments
+    `, [today]);
 
     // Revenue by day (last 7 days)
     const revenueByDayResult = await query(`
@@ -1306,10 +1508,20 @@ app.get('/api/stats/extended', authenticateToken, async (req, res) => {
         total: parseInt(leadsResult.rows[0].total_leads) || 0,
         new: parseInt(leadsResult.rows[0].new_leads) || 0,
         contacted: parseInt(leadsResult.rows[0].contacted_leads) || 0,
+        walkthroughScheduled: parseInt(leadsResult.rows[0].walkthrough_scheduled_leads) || 0,
+        quoteProvided: parseInt(leadsResult.rows[0].quote_provided_leads) || 0,
         converted: parseInt(leadsResult.rows[0].converted_leads) || 0,
         conversionRate: parseInt(leadsResult.rows[0].total_leads) > 0
           ? Math.round((parseInt(leadsResult.rows[0].converted_leads) / parseInt(leadsResult.rows[0].total_leads)) * 100)
           : 0
+      },
+      walkthroughs: {
+        total: parseInt(walkthroughsResult.rows[0].total_walkthroughs) || 0,
+        upcoming: parseInt(walkthroughsResult.rows[0].upcoming_walkthroughs) || 0,
+        completed: parseInt(walkthroughsResult.rows[0].completed_walkthroughs) || 0,
+        noShow: parseInt(walkthroughsResult.rows[0].no_show_walkthroughs) || 0,
+        converted: parseInt(walkthroughsResult.rows[0].converted_walkthroughs) || 0,
+        today: parseInt(walkthroughsResult.rows[0].today_walkthroughs) || 0
       },
       recurring: {
         total: parseInt(recurringResult.rows[0].total_recurring) || 0,

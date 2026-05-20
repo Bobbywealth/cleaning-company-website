@@ -13,7 +13,11 @@ import {
   logout as apiLogout,
   checkAuth,
   getStats,
-  initializeDemoData
+  initializeDemoData,
+  getWalkthroughs,
+  addWalkthrough,
+  updateWalkthrough,
+  deleteWalkthrough
 } from '../services/api';
 
 const AppContext = createContext(null);
@@ -30,6 +34,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [leads, setLeads] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [walkthroughs, setWalkthroughs] = useState([]);
   const [crewMembers, setCrewMembers] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('crewMembers');
@@ -51,7 +56,7 @@ export const AppProvider = ({ children }) => {
     }
     return [];
   });
-  const [stats, setStats] = useState({ newLeads: 0, bookedJobs: 0, totalJobs: 0, completedJobs: 0 });
+  const [stats, setStats] = useState({ newLeads: 0, bookedJobs: 0, totalJobs: 0, completedJobs: 0, todayWalkthroughs: 0, scheduledWalkthroughs: 0 });
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
   const [theme, setTheme] = useState(() => {
@@ -96,14 +101,21 @@ export const AppProvider = ({ children }) => {
   };
 
   const refreshData = async () => {
-    const [leadsData, jobsData, statsData] = await Promise.all([
+    const [leadsData, jobsData, statsData, walkthroughsData] = await Promise.all([
       getLeads(),
       getJobs(),
-      getStats()
+      getStats(),
+      getWalkthroughs()
     ]);
     setLeads(leadsData);
     setJobs(jobsData);
     setStats(statsData);
+    setWalkthroughs(walkthroughsData);
+  };
+
+  const refreshWalkthroughs = async () => {
+    const walkthroughsData = await getWalkthroughs();
+    setWalkthroughs(walkthroughsData);
   };
 
   const showNotification = (message, type = 'success') => {
@@ -189,6 +201,25 @@ export const AppProvider = ({ children }) => {
     showNotification('Job deleted');
   };
 
+  // Walkthrough functions
+  const createWalkthrough = async (walkthroughData) => {
+    await addWalkthrough(walkthroughData);
+    await refreshWalkthroughs();
+    showNotification('Walkthrough scheduled successfully!');
+  };
+
+  const updateWalkthroughStatus = async (id, updates) => {
+    await updateWalkthrough(id, updates);
+    await refreshWalkthroughs();
+    showNotification('Walkthrough updated successfully!');
+  };
+
+  const removeWalkthrough = async (id) => {
+    await deleteWalkthrough(id);
+    await refreshWalkthroughs();
+    showNotification('Walkthrough deleted');
+  };
+
   // Crew functions
   const addCrewMember = (member) => {
     const newId = Math.max(...crewMembers.map(m => m.id), 0) + 1;
@@ -267,6 +298,7 @@ export const AppProvider = ({ children }) => {
     isAuthenticated: !!user?.isAuthenticated,
     leads,
     jobs,
+    walkthroughs,
     crewMembers,
     invoices,
     recurringClients,
@@ -286,6 +318,11 @@ export const AppProvider = ({ children }) => {
     updateJobStatus,
     removeJob,
     refreshData,
+    // Walkthroughs
+    createWalkthrough,
+    updateWalkthroughStatus,
+    removeWalkthrough,
+    refreshWalkthroughs,
     // Crew
     addCrewMember,
     updateCrewMember,

@@ -298,7 +298,7 @@ export const getStats = async () => {
     const newLeads = leads.filter(l => l.status === "New").length;
     const bookedJobs = jobs.filter(j => j.status === "Confirmed" || j.status === "Scheduled").length;
     const completedJobs = jobs.filter(j => j.status === "Completed").length;
-    
+
     return {
       newLeads,
       bookedJobs,
@@ -307,5 +307,86 @@ export const getStats = async () => {
       totalLeads: leads.length,
       completionRate: jobs.length > 0 ? Math.round((completedJobs / jobs.length) * 100) : 0
     };
+  }
+};
+
+// ============ WALKTHROUGH API (Connected to Backend) ============
+
+export const getWalkthroughs = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.date) queryParams.append('date', params.date);
+    if (params.status) queryParams.append('status', params.status);
+    if (params.lead_id) queryParams.append('lead_id', params.lead_id);
+    const queryString = queryParams.toString();
+    return await apiRequest(`/api/walkthroughs${queryString ? '?' + queryString : ''}`);
+  } catch (error) {
+    console.log('Backend unavailable, using localStorage for walkthroughs');
+    const walkthroughs = localStorage.getItem('360cleaning_walkthroughs');
+    return walkthroughs ? JSON.parse(walkthroughs) : [];
+  }
+};
+
+export const addWalkthrough = async (walkthrough) => {
+  try {
+    return await apiRequest('/api/walkthroughs', {
+      method: 'POST',
+      body: JSON.stringify(walkthrough),
+    });
+  } catch (error) {
+    console.log('Backend unavailable, using localStorage for addWalkthrough');
+    const walkthroughs = JSON.parse(localStorage.getItem('360cleaning_walkthroughs') || '[]');
+    const newWalkthrough = {
+      id: Date.now(),
+      ...walkthrough,
+      status: 'Scheduled',
+      created_at: new Date().toISOString()
+    };
+    walkthroughs.unshift(newWalkthrough);
+    localStorage.setItem('360cleaning_walkthroughs', JSON.stringify(walkthroughs));
+    return newWalkthrough;
+  }
+};
+
+export const updateWalkthrough = async (id, updates) => {
+  try {
+    return await apiRequest(`/api/walkthroughs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  } catch (error) {
+    console.log('Backend unavailable, using localStorage for updateWalkthrough');
+    const walkthroughs = JSON.parse(localStorage.getItem('360cleaning_walkthroughs') || '[]');
+    const index = walkthroughs.findIndex(w => w.id === id || w.id === parseInt(id));
+    if (index !== -1) {
+      walkthroughs[index] = { ...walkthroughs[index], ...updates };
+      localStorage.setItem('360cleaning_walkthroughs', JSON.stringify(walkthroughs));
+      return walkthroughs[index];
+    }
+    return null;
+  }
+};
+
+export const deleteWalkthrough = async (id) => {
+  try {
+    await apiRequest(`/api/walkthroughs/${id}`, { method: 'DELETE' });
+    return true;
+  } catch (error) {
+    console.log('Backend unavailable, using localStorage for deleteWalkthrough');
+    const walkthroughs = JSON.parse(localStorage.getItem('360cleaning_walkthroughs') || '[]');
+    const filtered = walkthroughs.filter(w => w.id !== id && w.id !== parseInt(id));
+    localStorage.setItem('360cleaning_walkthroughs', JSON.stringify(filtered));
+    return true;
+  }
+};
+
+export const checkWalkthroughConflict = async (date, time, duration = 60, excludeId = null) => {
+  try {
+    const queryParams = new URLSearchParams({ date, time, duration_minutes: duration });
+    if (excludeId) queryParams.append('exclude_id', excludeId);
+    return await apiRequest(`/api/walkthroughs/check-conflict?${queryParams.toString()}`);
+  } catch (error) {
+    console.log('Backend unavailable, conflict check skipped');
+    return { hasConflict: false };
   }
 };

@@ -52,6 +52,7 @@ const RecurringClients = lazy(() => import('@/components/RecurringClients'));
 const Reports = lazy(() => import('@/components/Reports'));
 const EnhancedReports = lazy(() => import('@/components/EnhancedReports'));
 const WorkflowAutomation = lazy(() => import('@/components/WorkflowAutomation'));
+const WalkthroughCalendar = lazy(() => import('@/components/WalkthroughCalendar'));
 
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(() => {
@@ -584,6 +585,7 @@ const AdminDashboard = memo(() => {
   const tabs = useMemo(() => [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'leads', label: 'Leads', icon: Users, badge: stats.newLeads > 0 ? stats.newLeads : null },
+    { id: 'walkthroughs', label: 'Walkthroughs', icon: Calendar, badge: stats.todayWalkthroughs > 0 ? stats.todayWalkthroughs : null },
     { id: 'jobs', label: 'Jobs', icon: Calendar, badge: jobs.length > 0 ? jobs.length : null },
     { id: 'crew', label: 'Crew', icon: HardHat },
     { id: 'invoices', label: 'Invoices', icon: CreditCard },
@@ -591,7 +593,7 @@ const AdminDashboard = memo(() => {
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
     { id: 'automation', label: 'Automation', icon: Zap },
     { id: 'customers', label: 'Customers', icon: Star },
-  ], [stats.newLeads, jobs.length]);
+  ], [stats.newLeads, stats.todayWalkthroughs, jobs.length]);
 
   const globalSearchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -1129,8 +1131,24 @@ const AdminDashboard = memo(() => {
                       <LeadsList
                         searchQuery={searchQuery}
                         onCustomerClick={(lead) => setSelectedCustomer(lead)}
+                        onScheduleWalkthrough={(lead) => {
+                          setActiveTab('walkthroughs');
+                          setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('scheduleWalkthrough', { detail: lead }));
+                          }, 100);
+                        }}
                         theme={theme}
                       />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {activeTab === 'walkthroughs' && (
+                <div id="panel-walkthroughs" role="tabpanel" aria-labelledby="tab-walkthroughs">
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                    <CardContent className="p-4 md:p-6">
+                      <WalkthroughCalendar theme={theme} />
                     </CardContent>
                   </Card>
                 </div>

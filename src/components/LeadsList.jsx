@@ -9,11 +9,11 @@ import {
   X, Search, ChevronLeft, ChevronRight, Plus, Upload,
   Edit, Trash2, Phone, Mail, Filter, ArrowUpDown, ChevronDown,
   User, Building2, Home, MapPin, FileText, Check, AlertCircle,
-  ArrowUp, ArrowDown, Users
+  ArrowUp, ArrowDown, Users, Calendar
 } from 'lucide-react';
 import { getLeadStatusColor, getLeadSourceColor, formatDate } from '@/utils/dashboard';
 
-const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
+const LeadsList = ({ searchQuery = '', onCustomerClick, onScheduleWalkthrough, theme = 'dark' }) => {
   const { leads, markLeadContacted, markLeadConverted, removeLead, addLead, updateLeadData } = useApp();
   const [filter, setFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
@@ -849,6 +849,13 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                         Convert
                       </Button>
                     )}
+                    <Button
+                      onClick={() => onScheduleWalkthrough?.(lead)}
+                      className="bg-cyan-400/20 text-cyan-400 hover:bg-cyan-400/30 rounded-xl text-sm"
+                      title="Schedule Walkthrough"
+                    >
+                      <Calendar size={14} className="mr-1" /> Walkthrough
+                    </Button>
                     <Button
                       onClick={() => setEditingLead(lead)}
                       className="bg-blue-400/20 text-blue-400 hover:bg-blue-400/30 rounded-xl text-sm"
