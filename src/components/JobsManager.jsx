@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SkeletonCard } from '@/components/ui/skeleton';
+import { SkeletonCard } from '@/components/ui/Skeleton';
 import { useApp } from '@/context/AppContext';
 import { getJobStatusColor } from '@/utils/dashboard';
 import { 
