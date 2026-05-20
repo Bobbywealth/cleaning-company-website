@@ -120,16 +120,24 @@ export const AppProvider = ({ children }) => {
   };
 
   // Lead functions - local state update for immediate UI feedback
-  const addLead = (leadData) => {
+  const addLeadLocal = (leadData) => {
     setLeads(prev => [leadData, ...prev]);
     return leadData;
   };
 
-  const submitLead = (leadData) => {
-    const newLead = addLead(leadData);
-    refreshData();
-    showNotification('Quote request submitted successfully!');
-    return newLead;
+  const submitLead = async (leadData) => {
+    try {
+      // Call the API to persist the lead (uses localStorage fallback if backend unavailable)
+      const newLead = await addLead(leadData);
+      // Also update local state for immediate UI feedback
+      setLeads(prev => [newLead, ...prev]);
+      showNotification('Quote request submitted successfully!');
+      return newLead;
+    } catch (error) {
+      console.error('Error submitting lead:', error);
+      showNotification('Failed to submit quote request', 'error');
+      throw error;
+    }
   };
 
   const markLeadContacted = (id) => {

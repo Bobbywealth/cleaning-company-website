@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { calculateCleaningEstimate, formatPrice, getSavingsMessage } from '@/utils/calculateCleaningEstimate';
+import { updateLead } from '@/services/api';
 import {
   COUNTIES,
   CITY_AREAS,
@@ -179,29 +180,21 @@ Add-ons: ${step2Data.addOns.length > 0 ? step2Data.addOns.join(', ') : 'None'}
 Special Requests: ${step2Data.specialRequests || 'None'}
 ${estimate ? `ESTIMATED PRICE RANGE: $${estimate.lowEstimate} - $${estimate.highEstimate}` : ''}
     `.trim();
-    
-    // Update lead with full details
-    const leads = JSON.parse(localStorage.getItem('360cleaning_leads') || '[]');
-    const updatedLeads = leads.map(l => {
-      if (l.id === leadId) {
-        return {
-          ...l,
-          service: step2Data.serviceType,
-          business_type: step2Data.businessType || '',
-          notes: fullNotes,
-          propertySize: step2Data.propertySize,
-          bathrooms: step2Data.bathrooms,
-          frequency: step2Data.frequency,
-          county: step2Data.county,
-          cityArea: step2Data.cityArea,
-          addOns: step2Data.addOns,
-          estimatedLow: estimate?.lowEstimate,
-          estimatedHigh: estimate?.highEstimate,
-        };
-      }
-      return l;
+
+    // Update lead with full details via API
+    await updateLead(leadId, {
+      service: step2Data.serviceType,
+      business_type: step2Data.businessType || '',
+      notes: fullNotes,
+      property_size: step2Data.propertySize,
+      bathrooms: step2Data.bathrooms,
+      frequency: step2Data.frequency,
+      county: step2Data.county,
+      city_area: step2Data.cityArea,
+      add_ons: step2Data.addOns,
+      estimated_low: estimate?.lowEstimate,
+      estimated_high: estimate?.highEstimate,
     });
-    localStorage.setItem('360cleaning_leads', JSON.stringify(updatedLeads));
     
     setShowSuccess(true);
     setIsSubmitting(false);
