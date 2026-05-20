@@ -1573,47 +1573,111 @@ async function processStaleLeads(thresholdHours = 72) {
 
 async function processLeadFollowup() {
   const results = [];
-  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
 
-  const newLeads = await query(`
-    SELECT * FROM leads
-    WHERE status = 'New' AND created_at < $1
-  `, [fourHoursAgo.toISOString()]);
-
-  const sequences = await query(`
-    SELECT * FROM sms_sequences
-    WHERE trigger_status = 'New' AND is_active = true
-    ORDER BY step_order
+  // Get leads that need follow-up (status New, Contacted, or Stale, with incomplete sequences)
+  const leadsToProcess = await query(`
+    SELECT l.*, s.last_sequence_step, s.last_sent_at, s.completed as seq_completed,
+           COALESCE(l.service, 'residential') as service_type
+    FROM leads l
+    LEFT JOIN lead_sms_sequence_state s ON l.id = s.lead_id
+    WHERE l.status IN ('New', 'Contacted', 'Stale')
+      AND (s.completed IS NULL OR s.completed = FALSE)
   `);
 
-  for (const lead of newLeads.rows) {
-    for (const seq of sequences.rows) {
-      if (seq.delay_hours > 0) {
-        const seqThreshold = new Date(Date.now() - seq.delay_hours * 60 * 60 * 1000);
-        if (new Date(lead.created_at) > seqThreshold) continue;
+  for (const lead of leadsToProcess.rows) {
+    try {
+      // Determine service type from lead service
+      const serviceTypeMap = {
+        'Residential Cleaning': 'residential',
+        'Commercial Cleaning': 'commercial',
+        'Deep Cleaning': 'deep',
+        'Move In/Out': 'move',
+        'Post-Construction': 'construction'
+      };
+      const serviceType = serviceTypeMap[lead.service] || 'residential';
+
+      // Use 'stale' sequence if lead is stale
+      const triggerStatus = lead.status === 'Stale' ? 'Stale' : 'New';
+
+      // Get the next sequence step
+      const currentStep = lead.last_sequence_step || 0;
+      const nextStep = currentStep + 1;
+
+      const seqResult = await query(`
+        SELECT * FROM service_sms_sequences
+        WHERE service_type = $1 AND trigger_status = $2 AND sequence_order = $3 AND is_active = true
+      `, [serviceType, triggerStatus, nextStep]);
+
+      if (seqResult.rows.length === 0) {
+        continue;
       }
 
-      try {
-        const message = seq.message_template
-          .replace(/{{name}}/g, lead.name)
-          .replace(/{{phone}}/g, lead.phone);
+      const seq = seqResult.rows[0];
 
-        await query(`
-          INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
-        `, ['lead_followup', lead.name, lead.phone, lead.email, message, 'lead', lead.id, 'sent']);
-
-        if (lead.phone) {
-          const smsResult = await sendSMS(lead.phone, message);
-          if (!smsResult.success) {
-            console.log(`SMS failed for ${lead.name}: ${smsResult.error}`);
-          }
+      // Check if enough time has passed since last sent
+      if (lead.last_sent_at) {
+        const timeSinceLastSent = Date.now() - new Date(lead.last_sent_at).getTime();
+        const delayMs = seq.delay_hours * 60 * 60 * 1000;
+        if (timeSinceLastSent < delayMs) {
+          continue;
         }
-
-        results.push({ lead_id: lead.id, lead_name: lead.name, sequence: seq.name, sent: true });
-      } catch (err) {
-        results.push({ lead_id: lead.id, lead_name: lead.name, sequence: seq.name, sent: false, error: err.message });
+      } else {
+        // First message - check if enough time since lead created
+        const timeSinceCreated = Date.now() - new Date(lead.created_at).getTime();
+        const delayMs = seq.delay_hours * 60 * 60 * 1000;
+        if (timeSinceCreated < delayMs) {
+          continue;
+        }
       }
+
+      // Replace placeholders in message
+      const message = seq.message_template
+        .replace(/{{name}}/g, lead.name)
+        .replace(/{{phone}}/g, lead.phone)
+        .replace(/{{service}}/g, lead.service || '')
+        .replace(/{{county}}/g, lead.county || '')
+        .replace(/{{estimated_price}}/g, lead.estimated_low ? `$${lead.estimated_low}` : '');
+
+      // Save notification
+      await query(`
+        INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+      `, ['lead_followup', lead.name, lead.phone, lead.email, message, 'lead', lead.id, 'sent']);
+
+      // Send SMS
+      if (lead.phone) {
+        const smsResult = await sendSMS(lead.phone, message);
+        if (!smsResult.success) {
+          console.log(`SMS failed for ${lead.name}: ${smsResult.error}`);
+        }
+      }
+
+      // Update sequence state
+      await query(`
+        INSERT INTO lead_sms_sequence_state (lead_id, service_type, trigger_status, last_sequence_step, last_sent_at, completed)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (lead_id, service_type, trigger_status)
+        DO UPDATE SET last_sequence_step = $4, last_sent_at = $5
+      `, [lead.id, serviceType, triggerStatus, nextStep, new Date().toISOString()]);
+
+      // Check if this was the last step in the sequence
+      const lastStepResult = await query(`
+        SELECT MAX(sequence_order) as max_step FROM service_sms_sequences
+        WHERE service_type = $1 AND trigger_status = $2 AND is_active = true
+      `, [serviceType, triggerStatus]);
+
+      const maxStep = lastStepResult.rows[0].max_step;
+      if (nextStep >= maxStep) {
+        await query(`
+          UPDATE lead_sms_sequence_state SET completed = TRUE, completed_at = CURRENT_TIMESTAMP
+          WHERE lead_id = $1 AND service_type = $2 AND trigger_status = $3
+        `, [lead.id, serviceType, triggerStatus]);
+      }
+
+      results.push({ lead_id: lead.id, lead_name: lead.name, sequence_step: nextStep, sent: true });
+    } catch (err) {
+      console.error(`Error processing lead ${lead.id}:`, err.message);
+      results.push({ lead_id: lead.id, lead_name: lead.name, sent: false, error: err.message });
     }
   }
 
@@ -2258,6 +2322,194 @@ app.post('/api/notifications/send-bulk', authenticateToken, async (req, res) => 
     res.json({ success: true, sent_count: sent.length, sms_sent: sent.length, recipients: sent, failed });
   } catch (error) {
     console.error('Send bulk notifications error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ MARKETING API ROUTES ============
+
+// Get marketing statistics
+app.get('/api/marketing/stats', authenticateToken, async (req, res) => {
+  try {
+    const totalLeads = await query('SELECT COUNT(*) as count FROM leads');
+    const leadsByStatus = await query(`
+      SELECT status, COUNT(*) as count FROM leads GROUP BY status
+    `);
+    const leadsByService = await query(`
+      SELECT service, COUNT(*) as count FROM leads WHERE service IS NOT NULL GROUP BY service
+    `);
+    const smsSent = await query(`
+      SELECT COUNT(*) as count FROM notifications WHERE type IN ('lead_followup', 'lead_received') AND delivery_status = 'sent'
+    `);
+    const recentLeads = await query(`
+      SELECT * FROM leads ORDER BY created_at DESC LIMIT 10
+    `);
+
+    const convertedLeads = await query(`
+      SELECT COUNT(*) as count FROM leads WHERE status = 'Converted'
+    `);
+
+    res.json({
+      total_leads: parseInt(totalLeads.rows[0].count),
+      converted_leads: parseInt(convertedLeads.rows[0].count),
+      leads_by_status: leadsByStatus.rows,
+      leads_by_service: leadsByService.rows,
+      sms_sent: parseInt(smsSent.rows[0].count),
+      recent_leads: recentLeads.rows
+    });
+  } catch (error) {
+    console.error('Get marketing stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get leads with SMS history for marketing
+app.get('/api/marketing/leads', authenticateToken, async (req, res) => {
+  try {
+    const { service, status, limit = 100, offset = 0 } = req.query;
+
+    let query_str = 'SELECT l.*, s.last_sequence_step, s.completed as seq_completed FROM leads l LEFT JOIN lead_sms_sequence_state s ON l.id = s.lead_id WHERE 1=1';
+    const params = [];
+
+    if (service && service !== 'all') {
+      params.push(service);
+      query_str += ` AND l.service = $${params.length}`;
+    }
+    if (status && status !== 'all') {
+      params.push(status);
+      query_str += ` AND l.status = $${params.length}`;
+    }
+
+    query_str += ` ORDER BY l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(parseInt(limit), parseInt(offset));
+
+    const result = await query(query_str, params);
+
+    // Get SMS history for these leads
+    const leadIds = result.rows.map(r => r.id);
+    let smsHistory = [];
+    if (leadIds.length > 0) {
+      const historyResult = await query(`
+        SELECT * FROM notifications
+        WHERE related_entity_id = ANY($1) AND related_entity_type = 'lead'
+        ORDER BY sent_at DESC
+      `, [leadIds]);
+      smsHistory = historyResult.rows;
+    }
+
+    // Attach SMS history to each lead
+    const leadsWithHistory = result.rows.map(lead => ({
+      ...lead,
+      sms_history: smsHistory.filter(h => h.related_entity_id === lead.id)
+    }));
+
+    res.json(leadsWithHistory);
+  } catch (error) {
+    console.error('Get marketing leads error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Send single SMS to a lead
+app.post('/api/marketing/send-single', authenticateToken, async (req, res) => {
+  try {
+    const { lead_id, message } = req.body;
+
+    if (!lead_id || !message) {
+      return res.status(400).json({ error: 'lead_id and message are required' });
+    }
+
+    const leadResult = await query('SELECT * FROM leads WHERE id = $1', [lead_id]);
+    if (leadResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    const lead = leadResult.rows[0];
+
+    // Save notification
+    await query(
+      `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+      ['marketing_sms', lead.name, lead.phone, lead.email, message, 'lead', lead.id, 'sent']
+    );
+
+    // Send SMS
+    let smsResult = { success: false };
+    if (lead.phone) {
+      smsResult = await sendSMS(lead.phone, message);
+    }
+
+    res.json({
+      success: true,
+      lead_id,
+      sms_sent: smsResult.success,
+      error: smsResult.success ? null : smsResult.error
+    });
+  } catch (error) {
+    console.error('Send single SMS error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get service SMS sequences for template management
+app.get('/api/service-sms-sequences', authenticateToken, async (req, res) => {
+  try {
+    const { service_type } = req.query;
+
+    let query_str = 'SELECT * FROM service_sms_sequences WHERE 1=1';
+    const params = [];
+
+    if (service_type && service_type !== 'all') {
+      params.push(service_type);
+      query_str += ` AND service_type = $${params.length}`;
+    }
+
+    query_str += ' ORDER BY service_type, sequence_order';
+
+    const result = await query(query_str, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get service SMS sequences error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update a service SMS sequence
+app.put('/api/service-sms-sequences/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { message_template, delay_hours, is_active } = req.body;
+
+    const result = await query(
+      `UPDATE service_sms_sequences
+       SET message_template = COALESCE($1, message_template),
+           delay_hours = COALESCE($2, delay_hours),
+           is_active = COALESCE($3, is_active)
+       WHERE id = $4
+       RETURNING *`,
+      [message_template, delay_hours, is_active, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Sequence not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update service SMS sequence error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get distinct service types for filtering
+app.get('/api/marketing/service-types', authenticateToken, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT DISTINCT service FROM leads WHERE service IS NOT NULL ORDER BY service
+    `);
+    res.json(result.rows.map(r => r.service));
+  } catch (error) {
+    console.error('Get service types error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -8,6 +8,7 @@ import QuotePage from './pages/QuotePage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import MarketingCenter from './components/MarketingCenter';
 import OnlineBooking from './components/OnlineBooking';
 
 function App() {
@@ -37,6 +38,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/marketing"
+              element={
+                <ProtectedRoute>
+                  <MarketingCenter theme="dark" />
                 </ProtectedRoute>
               }
             />
