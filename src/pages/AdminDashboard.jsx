@@ -585,6 +585,7 @@ const AdminDashboard = memo(() => {
     { id: 'invoices', label: 'Invoices', icon: CreditCard },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
+    { id: 'customers', label: 'Customers', icon: Star },
   ], [stats.newLeads, jobs.length]);
 
   const globalSearchResults = useMemo(() => {
@@ -1185,6 +1186,41 @@ const AdminDashboard = memo(() => {
               {activeTab === 'marketing' && (
                 <div id="panel-marketing" role="tabpanel" aria-labelledby="tab-marketing">
                   <MarketingCenter theme={theme} />
+                </div>
+              )}
+
+              {activeTab === 'customers' && (
+                <div id="panel-customers" role="tabpanel" aria-labelledby="tab-customers">
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                    <CardContent className="p-4 md:p-6">
+                      <h2 className="text-xl font-bold mb-4">All Customers</h2>
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {leads.filter(l => l.status === 'Converted').map(lead => (
+                          <div
+                            key={lead.id}
+                            onClick={() => setSelectedCustomer(lead)}
+                            className={`p-4 rounded-2xl cursor-pointer hover:scale-[1.02] transition ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-slate-50 hover:bg-slate-100'}`}
+                          >
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="h-12 w-12 rounded-full bg-green-400/20 flex items-center justify-center text-xl font-bold">
+                                {lead.name.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="font-bold">{lead.name}</p>
+                                <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{lead.phone}</p>
+                              </div>
+                            </div>
+                            <p className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{lead.service}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {leads.filter(l => l.status === 'Converted').length === 0 && (
+                        <p className={`text-center py-12 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          No customers yet. Convert leads to see them here.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
