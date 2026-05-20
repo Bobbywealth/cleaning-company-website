@@ -594,12 +594,12 @@ const Home = () => {
               <div>
                 <h4 className="font-bold text-white mb-4">Services</h4>
                 <ul className="space-y-2 text-slate-400 text-sm">
-                  <li className="hover:text-cyan-400 cursor-pointer">Residential Cleaning</li>
-                  <li className="hover:text-cyan-400 cursor-pointer">Commercial Cleaning</li>
-                  <li className="hover:text-cyan-400 cursor-pointer">Deep Cleaning</li>
-                  <li className="hover:text-cyan-400 cursor-pointer">Apartment Cleaning</li>
-                  <li className="hover:text-cyan-400 cursor-pointer">Airbnb Cleaning</li>
-                  <li className="hover:text-cyan-400 cursor-pointer">Restaurant Cleaning</li>
+                  <li><button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-400 cursor-pointer text-left">Residential Cleaning</button></li>
+                  <li><button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-400 cursor-pointer text-left">Commercial Cleaning</button></li>
+                  <li><button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-400 cursor-pointer text-left">Deep Cleaning</button></li>
+                  <li><button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-400 cursor-pointer text-left">Apartment Cleaning</button></li>
+                  <li><button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-400 cursor-pointer text-left">Airbnb Cleaning</button></li>
+                  <li><button onClick={() => scrollToSection(servicesRef)} className="hover:text-cyan-400 cursor-pointer text-left">Restaurant Cleaning</button></li>
                 </ul>
               </div>
               <div>
@@ -624,7 +624,13 @@ const Home = () => {
             </div>
             <div className="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-slate-400 text-sm">© 2026 360 Cleaning Co. All rights reserved.</p>
-              <p className="text-slate-500 text-sm">Privacy Policy • Terms of Service • Careers</p>
+              <p className="text-slate-500 text-sm">
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-cyan-400">Privacy Policy</button>
+                <span className="mx-2">•</span>
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-cyan-400">Terms of Service</button>
+                <span className="mx-2">•</span>
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-cyan-400">Careers</button>
+              </p>
             </div>
           </div>
         </footer>

@@ -145,18 +145,62 @@ const Reports = ({ theme = 'dark' }) => {
     });
   };
 
+  const exportToCSV = (data, filename, headers) => {
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => row.map(cell => `"${cell || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   const handleExport = useCallback((type) => {
     setIsLoading(true);
     setTimeout(() => {
-      const exportFunctions = {
-        leads: () => alert('Exporting leads report as CSV...'),
-        jobs: () => alert('Exporting jobs report as CSV...'),
-        revenue: () => alert('Generating revenue report PDF...')
-      };
-      exportFunctions[type]?.();
+      if (type === 'leads') {
+        const leadsData = getFilteredLeads().map(lead => [
+          lead.name || '',
+          lead.phone || '',
+          lead.email || '',
+          lead.service || '',
+          lead.status || '',
+          lead.lead_source || '',
+          lead.createdAt || lead.created_at || '',
+          lead.notes || ''
+        ]);
+        exportToCSV(leadsData, `leads-report-${new Date().toISOString().split('T')[0]}.csv`, ['Name', 'Phone', 'Email', 'Service', 'Status', 'Source', 'Created', 'Notes']);
+      } else if (type === 'jobs') {
+        const jobsData = getFilteredJobs().map(job => [
+          job.client || '',
+          job.service || '',
+          job.date || '',
+          job.status || '',
+          job.address || '',
+          job.crew || '',
+          job.price || ''
+        ]);
+        exportToCSV(jobsData, `jobs-report-${new Date().toISOString().split('T')[0]}.csv`, ['Client', 'Service', 'Date', 'Status', 'Address', 'Crew', 'Price']);
+      } else if (type === 'revenue') {
+        const revenueData = getFilteredInvoices()
+          .filter(i => i.status === 'paid')
+          .map(inv => [
+            inv.id || '',
+            inv.client || '',
+            inv.email || '',
+            inv.amount || '',
+            inv.status || '',
+            inv.date || inv.created_at || ''
+          ]);
+        exportToCSV(revenueData, `revenue-report-${new Date().toISOString().split('T')[0]}.csv`, ['Invoice ID', 'Client', 'Email', 'Amount', 'Status', 'Date']);
+      }
       setIsLoading(false);
     }, 500);
-  }, []);
+  }, [getFilteredLeads, getFilteredJobs, getFilteredInvoices]);
 
   const handleDateRangeKeyDown = useCallback((e, currentInput) => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
