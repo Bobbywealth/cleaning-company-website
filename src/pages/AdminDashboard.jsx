@@ -1182,7 +1182,16 @@ const AdminDashboard = memo(() => {
                 <div id="panel-customers" role="tabpanel" aria-labelledby="tab-customers">
                   <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
-                      <h2 className="text-xl font-bold mb-4">All Customers</h2>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold">All Customers</h2>
+                        <Button
+                          onClick={() => setActiveTab('leads')}
+                          className="bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-xl text-sm"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Customer
+                        </Button>
+                      </div>
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {leads.filter(l => l.status === 'Converted').map(lead => (
                           <div
