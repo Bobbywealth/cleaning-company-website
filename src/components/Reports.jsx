@@ -5,6 +5,8 @@ import { useApp } from '@/context/AppContext';
 const Reports = ({ theme = 'dark' }) => {
   const { leads, jobs, invoices } = useApp();
   const [dateRange, setDateRange] = useState('30');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   const convertedLeads = leads.filter(l => l.status === 'Converted');
   const conversionRate = leads.length > 0 ? Math.round((convertedLeads.length / leads.length) * 100) : 0;
@@ -51,9 +53,53 @@ const Reports = ({ theme = 'dark' }) => {
     .slice(0, 5)
     .map(([day, count]) => ({ day, jobs: count }));
 
+  // Calculate date range boundaries
+  const getDateBounds = () => {
+    const now = new Date();
+    if (dateRange === 'custom' && customStartDate && customEndDate) {
+      return {
+        start: new Date(customStartDate),
+        end: new Date(customEndDate),
+        isCustom: true
+      };
+    }
+    const days = parseInt(dateRange);
+    const start = new Date(now);
+    start.setDate(now.getDate() - days);
+    return { start, end: now, isCustom: false };
+  };
+
+  // Filter leads by date range
+  const getFilteredLeads = () => {
+    const { start, end } = getDateBounds();
+    return leads.filter(l => {
+      const created = new Date(l.createdAt || l.created_at);
+      return created >= start && created <= end;
+    });
+  };
+
+  // Filter jobs by date range
+  const getFilteredJobs = () => {
+    const { start, end } = getDateBounds();
+    return jobs.filter(j => {
+      const jobDate = new Date(j.date);
+      return jobDate >= start && jobDate <= end;
+    });
+  };
+
+  // Filter invoices by date range
+  const getFilteredInvoices = () => {
+    const { start, end } = getDateBounds();
+    return invoices.filter(i => {
+      const invDate = new Date(i.date || i.created_at);
+      return invDate >= start && invDate <= end;
+    });
+  };
+
   // Calculate weekly data from real jobs
   const generateWeeklyData = () => {
     const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+    const { start: rangeStart } = getDateBounds();
     const now = new Date();
     
     return weeks.map((week, i) => {
@@ -61,19 +107,19 @@ const Reports = ({ theme = 'dark' }) => {
       weekStart.setDate(now.getDate() - ((3 - i + 1) * 7));
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 7);
-      
-      const weekLeads = leads.filter(l => {
-        const created = new Date(l.createdAt);
+
+      const weekLeads = getFilteredLeads().filter(l => {
+        const created = new Date(l.createdAt || l.created_at);
         return created >= weekStart && created < weekEnd;
       }).length;
-      
-      const weekJobs = jobs.filter(j => {
+
+      const weekJobs = getFilteredJobs().filter(j => {
         const jobDate = new Date(j.date);
         return jobDate >= weekStart && jobDate < weekEnd;
       }).length;
-      
-      const weekRevenue = invoices.filter(i => {
-        const invDate = new Date(i.date);
+
+      const weekRevenue = getFilteredInvoices().filter(i => {
+        const invDate = new Date(i.date || i.created_at);
         return invDate >= weekStart && invDate < weekEnd && i.status === 'paid';
       }).reduce((sum, i) => sum + i.amount, 0);
       
@@ -98,24 +144,44 @@ const Reports = ({ theme = 'dark' }) => {
             Business performance insights
           </p>
         </div>
-        <select
-          value={dateRange}
-          onChange={(e) => setDateRange(e.target.value)}
-          className={`px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
-        >
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-          <option value="365">Last year</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className={`px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
+          >
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          {dateRange === 'custom' && (
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
+              />
+              <span className="text-slate-400">to</span>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>{leads.length}</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Total Leads</p>
+            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>{getFilteredLeads().length}</p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Leads in Period</p>
           </CardContent>
         </Card>
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
@@ -126,14 +192,14 @@ const Reports = ({ theme = 'dark' }) => {
         </Card>
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}>{jobs.length}</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Jobs Completed</p>
+            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}>{getFilteredJobs().length}</p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Jobs in Period</p>
           </CardContent>
         </Card>
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>${totalRevenue}</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Total Revenue</p>
+            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>${getFilteredInvoices().filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0)}</p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Revenue in Period</p>
           </CardContent>
         </Card>
       </div>

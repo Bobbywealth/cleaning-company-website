@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext';
 const RecurringClients = ({ theme = 'dark' }) => {
   const { recurringClients, addRecurringClient, updateRecurringClient, removeRecurringClient, toggleRecurringPause, createJob } = useApp();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
   const [newClient, setNewClient] = useState({ name: '', phone: '', email: '', plan: 'standard', frequency: 'biweekly', price: '' });
 
   const getPlanColor = (plan) => {
@@ -50,6 +51,43 @@ const RecurringClients = ({ theme = 'dark' }) => {
       recurring: true
     };
     createJob(jobData);
+  };
+
+  const handleEditClient = (client) => {
+    setEditingClient(client);
+    setNewClient({
+      name: client.name,
+      phone: client.phone,
+      email: client.email,
+      plan: client.plan,
+      frequency: client.frequency,
+      price: client.price.toString()
+    });
+  };
+
+  const handleUpdateClient = (e) => {
+    e.preventDefault();
+    updateRecurringClient(editingClient.id, {
+      name: newClient.name,
+      phone: newClient.phone,
+      email: newClient.email,
+      plan: newClient.plan,
+      frequency: newClient.frequency,
+      price: parseFloat(newClient.price)
+    });
+    setEditingClient(null);
+    setNewClient({ name: '', phone: '', email: '', plan: 'standard', frequency: 'biweekly', price: '' });
+  };
+
+  const handleDeleteClient = (id) => {
+    if (confirm('Are you sure you want to delete this recurring client?')) {
+      removeRecurringClient(id);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingClient(null);
+    setNewClient({ name: '', phone: '', email: '', plan: 'standard', frequency: 'biweekly', price: '' });
   };
 
   const activeClients = recurringClients.filter(c => c.status === 'active').length;
@@ -167,6 +205,93 @@ const RecurringClients = ({ theme = 'dark' }) => {
         </Card>
       )}
 
+      {/* Edit Form Modal */}
+      {editingClient && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className={`${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-white border-slate-200'} rounded-2xl w-full max-w-2xl`}>
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Edit Recurring Client</h3>
+                <button onClick={handleCancelEdit} className="text-2xl hover:opacity-70">✕</button>
+              </div>
+              <form onSubmit={handleUpdateClient} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Client Name</label>
+                    <input
+                      value={newClient.name}
+                      onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                      className={`w-full rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'} border px-4 py-2.5 outline-none focus:border-cyan-400`}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Phone</label>
+                    <input
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                      className={`w-full rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'} border px-4 py-2.5 outline-none focus:border-cyan-400`}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Email</label>
+                    <input
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                      className={`w-full rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'} border px-4 py-2.5 outline-none focus:border-cyan-400`}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Plan</label>
+                    <select
+                      value={newClient.plan}
+                      onChange={(e) => setNewClient({...newClient, plan: e.target.value})}
+                      className={`w-full rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'} border px-4 py-2.5 outline-none focus:border-cyan-400`}
+                    >
+                      <option value="basic">Basic</option>
+                      <option value="standard">Standard</option>
+                      <option value="premium">Premium</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Frequency</label>
+                    <select
+                      value={newClient.frequency}
+                      onChange={(e) => setNewClient({...newClient, frequency: e.target.value})}
+                      className={`w-full rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'} border px-4 py-2.5 outline-none focus:border-cyan-400`}
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="biweekly">Bi-weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Price ($)</label>
+                    <input
+                      value={newClient.price}
+                      onChange={(e) => setNewClient({...newClient, price: e.target.value})}
+                      className={`w-full rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-slate-100 border-slate-200'} border px-4 py-2.5 outline-none focus:border-cyan-400`}
+                      type="number"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button type="button" onClick={handleCancelEdit} className={`flex-1 rounded-xl ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-200'}`}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-xl">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Plans Info */}
       <div className="grid md:grid-cols-3 gap-4">
         {[
@@ -218,7 +343,7 @@ const RecurringClients = ({ theme = 'dark' }) => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
+                  <Button
                     onClick={() => toggleRecurringPause(client.id)}
                     className={`flex-1 rounded-lg text-sm ${
                       client.status === 'active'
@@ -228,11 +353,25 @@ const RecurringClients = ({ theme = 'dark' }) => {
                   >
                     {client.status === 'active' ? '⏸️ Pause' : '▶️ Resume'}
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => scheduleJob(client)}
                     className="flex-1 bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-lg text-sm"
                   >
                     📅 Schedule
+                  </Button>
+                  <Button
+                    onClick={() => handleEditClient(client)}
+                    className="bg-blue-400/20 text-blue-400 hover:bg-blue-400/30 rounded-lg text-sm px-3"
+                    title="Edit"
+                  >
+                    ✏️
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteClient(client.id)}
+                    className="bg-red-400/20 text-red-400 hover:bg-red-400/30 rounded-lg text-sm px-3"
+                    title="Delete"
+                  >
+                    🗑️
                   </Button>
                 </div>
               </div>

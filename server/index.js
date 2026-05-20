@@ -3,11 +3,29 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
+import nodemailer from 'nodemailer';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { query, initializeDatabase } from './db.js';
 
 dotenv.config();
+
+// Initialize email transporter
+const emailTransporter = process.env.SMTP_HOST
+  ? nodemailer.createTransporter({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
+  : null;
+
+if (!emailTransporter) {
+  console.log('⚠️  Email not configured - SMTP_HOST not set. Invoice emails will be logged only.');
+}
 
 // Initialize Stripe conditionally (only if API key is available)
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -420,6 +438,84 @@ app.delete('/api/invoices/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Delete invoice error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ EMAIL ROUTES ============
+app.post('/api/invoices/send', authenticateToken, async (req, res) => {
+  try {
+    const { invoiceId } = req.body;
+
+    if (!invoiceId) {
+      return res.status(400).json({ error: 'Invoice ID required' });
+    }
+
+    // Fetch the invoice from database
+    const result = await query('SELECT * FROM invoices WHERE id = $1', [invoiceId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    const invoice = result.rows[0];
+
+    const invoiceHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #06b6d4, #3b82f6); padding: 30px; border-radius: 16px 16px 0 0; color: white;">
+          <h1 style="margin: 0; font-size: 28px;">360 Cleaning Co.</h1>
+          <p style="margin: 10px 0 0; opacity: 0.9;">Professional Cleaning Services in New Jersey</p>
+        </div>
+        <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 16px 16px; border: 1px solid #e2e8f0;">
+          <h2 style="color: #1e293b; margin-top: 0;">Invoice #${invoice.id}</h2>
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Client</td>
+              <td style="padding: 10px 0; font-weight: bold; text-align: right;">${invoice.client}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Service</td>
+              <td style="padding: 10px 0; text-align: right;">${invoice.service || 'Cleaning Service'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Date</td>
+              <td style="padding: 10px 0; text-align: right;">${invoice.date || new Date().toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Due Date</td>
+              <td style="padding: 10px 0; text-align: right;">${invoice.due_date || 'Net 14'}</td>
+            </tr>
+            <tr style="border-top: 2px solid #e2e8f0;">
+              <td style="padding: 15px 0; font-size: 20px; font-weight: bold; color: #1e293b;">Amount Due</td>
+              <td style="padding: 15px 0; font-size: 24px; font-weight: bold; text-align: right; color: #06b6d4;">$${parseFloat(invoice.amount || 0).toFixed(2)}</td>
+            </tr>
+          </table>
+          <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; margin-top: 20px;">
+            <p style="margin: 0; color: #64748b; font-size: 14px; text-align: center;">
+              Thank you for your business! For questions, contact us at info@360cleaningco.com or (862) 285-4949
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || '"360 Cleaning Co." <noreply@360cleaningco.com>',
+      to: invoice.email,
+      subject: `Invoice #${invoice.id} from 360 Cleaning Co.`,
+      html: invoiceHtml,
+    };
+
+    if (emailTransporter) {
+      await emailTransporter.sendMail(mailOptions);
+      console.log(`Invoice email sent to ${invoice.email} for invoice ${invoice.id}`);
+      res.json({ success: true, message: 'Email sent successfully' });
+    } else {
+      // Log the email instead of sending when SMTP is not configured
+      console.log('📧 Invoice email (simulated):', mailOptions);
+      res.json({ success: true, message: 'Email logged (SMTP not configured)' });
+    }
+  } catch (error) {
+    console.error('Send invoice email error:', error);
+    res.status(500).json({ error: 'Failed to send email' });
   }
 });
 

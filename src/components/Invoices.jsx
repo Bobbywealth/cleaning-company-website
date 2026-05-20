@@ -13,6 +13,7 @@ const Invoices = ({ theme = 'dark' }) => {
   const [publishableKey, setPublishableKey] = useState('');
   const [stripePromise, setStripePromise] = useState(null);
   const [newInvoice, setNewInvoice] = useState({ client: '', email: '', amount: '', service: '' });
+  const [sendingEmail, setSendingEmail] = useState(null);
 
   // Load Stripe config on mount
   useEffect(() => {
@@ -169,6 +170,34 @@ const Invoices = ({ theme = 'dark' }) => {
         removeInvoice(id); // Still remove locally
       }
     }
+  };
+
+  const sendInvoiceEmail = async (invoice) => {
+    setSendingEmail(invoice.id);
+    try {
+      const authData = localStorage.getItem('360cleaning_auth');
+      const token = authData ? JSON.parse(authData).token : '';
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ invoiceId: invoice.id }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Invoice sent successfully to ${invoice.email}!`);
+      } else {
+        alert(`Failed to send invoice: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Send email error:', error);
+      alert('Failed to send invoice email');
+    }
+    setSendingEmail(null);
   };
 
   const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
@@ -332,11 +361,12 @@ const Invoices = ({ theme = 'dark' }) => {
                             </Button>
                           </>
                         )}
-                        <Button 
-                          onClick={() => alert(`Sending invoice ${invoice.id} to ${invoice.email}`)}
+                        <Button
+                          onClick={() => sendInvoiceEmail(invoice)}
+                          disabled={sendingEmail === invoice.id}
                           className={`rounded-lg text-sm ${theme === 'dark' ? 'bg-white/10 hover:bg-white/20' : 'bg-slate-100 hover:bg-slate-200'}`}
                         >
-                          📧 Send
+                          {sendingEmail === invoice.id ? '⏳ Sending...' : '📧 Send'}
                         </Button>
                         <Button 
                           onClick={() => deleteInvoice(invoice.id)}

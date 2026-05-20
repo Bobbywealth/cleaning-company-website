@@ -12,6 +12,7 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
   const [sortBy, setSortBy] = useState('newest');
   const [showAddForm, setShowAddForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [editingLead, setEditingLead] = useState(null);
   const [localSearch, setLocalSearch] = useState('');
   const fileInputRef = useRef(null);
 
@@ -500,18 +501,18 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                     </div>
                   </div>
                   
-                  {/* Right: Actions */}
-                  <div className="flex flex-wrap gap-2 ml-12 md:ml-0">
+{/* Right: Actions */}
+                  <div className="flex flex-wrap gap-2">
                     {lead.phone && (
                       <>
-                        <a 
+                        <a
                           href={`tel:${lead.phone}`}
                           className="p-2 rounded-xl bg-green-400/20 text-green-400 hover:bg-green-400/30 transition"
                           title="Call"
                         >
                           📞
                         </a>
-                        <a 
+                        <a
                           href={`sms:${lead.phone}`}
                           className="p-2 rounded-xl bg-blue-400/20 text-blue-400 hover:bg-blue-400/30 transition"
                           title="Text"
@@ -521,7 +522,7 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                       </>
                     )}
                     {lead.status === 'New' && (
-                      <Button 
+                      <Button
                         onClick={() => markLeadContacted(lead.id)}
                         className="bg-yellow-400 text-slate-950 hover:bg-yellow-300 rounded-xl text-sm"
                       >
@@ -529,14 +530,21 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                       </Button>
                     )}
                     {lead.status === 'Contacted' && (
-                      <Button 
+                      <Button
                         onClick={() => markLeadConverted(lead.id)}
                         className="bg-green-400 text-slate-950 hover:bg-green-300 rounded-xl text-sm"
                       >
                         ⭐ Convert
                       </Button>
                     )}
-                    <Button 
+                    <Button
+                      onClick={() => setEditingLead(lead)}
+                      className="bg-blue-400/20 text-blue-400 hover:bg-blue-400/30 rounded-xl text-sm"
+                      title="Edit"
+                    >
+                      ✏️
+                    </Button>
+                    <Button
                       onClick={() => {
                         if (confirm('Delete this lead?')) removeLead(lead.id);
                       }}
@@ -753,6 +761,137 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                 Leads will be imported as "Cold Call" prospects with status "New"
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Lead Modal */}
+      {editingLead && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Edit Lead</h3>
+              <button
+                onClick={() => setEditingLead(null)}
+                className="text-2xl hover:opacity-70"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const updates = {
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                email: formData.get('email'),
+                service: formData.get('service'),
+                business_type: formData.get('business_type'),
+                address: formData.get('address'),
+                notes: formData.get('notes'),
+                status: formData.get('status')
+              };
+              updateLeadData(editingLead.id, updates);
+              setEditingLead(null);
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={editingLead.name}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  defaultValue={editingLead.phone}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  defaultValue={editingLead.email}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Service</label>
+                <select
+                  name="service"
+                  defaultValue={editingLead.service}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                >
+                  <option value="Residential Cleaning">Residential Cleaning</option>
+                  <option value="Commercial Cleaning">Commercial Cleaning</option>
+                  <option value="Deep Cleaning">Deep Cleaning</option>
+                  <option value="Move In/Out">Move In/Out</option>
+                  <option value="Post-Construction">Post-Construction</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Business Type</label>
+                <input
+                  type="text"
+                  name="business_type"
+                  defaultValue={editingLead.business_type}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  defaultValue={editingLead.address}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  name="status"
+                  defaultValue={editingLead.status}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                >
+                  <option value="New">New</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Converted">Converted</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Notes</label>
+                <textarea
+                  name="notes"
+                  defaultValue={editingLead.notes}
+                  rows={3}
+                  className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border border-white/20' : 'bg-slate-100 border border-slate-200'} outline-none`}
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  onClick={() => setEditingLead(null)}
+                  className={`flex-1 rounded-xl ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-200'}`}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-cyan-400 hover:bg-cyan-300 text-slate-950 rounded-xl"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
