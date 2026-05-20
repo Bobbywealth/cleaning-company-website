@@ -102,6 +102,28 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || '360cleaning_jwt_secret_2026';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const API_KEY = process.env.API_KEY || '360cleaning_api_key_2026';
+
+// API Key authentication middleware for external access
+const apiKeyAuth = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+  if (apiKey && apiKey === API_KEY) {
+    return next();
+  }
+  // Allow regular auth token or API key
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+      return next();
+    } catch (err) {
+      // Invalid token
+    }
+  }
+  // For public endpoints, allow without auth
+  next();
+};
 
 // Middleware
 app.use(cors({
