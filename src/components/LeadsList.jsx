@@ -1045,7 +1045,7 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
               const formData = new FormData(e.target);
               const updates = {
@@ -1058,7 +1058,11 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                 notes: formData.get('notes'),
                 status: formData.get('status')
               };
-              updateLeadData(editingLead.id, updates);
+              try {
+                await updateLeadData(editingLead.id, updates);
+              } catch (error) {
+                console.error('Failed to update lead:', error);
+              }
               setEditingLead(null);
             }} className="space-y-4">
               <div>

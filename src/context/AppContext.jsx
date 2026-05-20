@@ -164,9 +164,9 @@ export const AppProvider = ({ children }) => {
     showNotification('Lead deleted');
   };
 
-  const updateLeadData = (id, updates) => {
-    updateLead(id, updates);
-    refreshData();
+  const updateLeadData = async (id, updates) => {
+    await updateLead(id, updates);
+    await refreshData();
   };
 
   // Job functions
