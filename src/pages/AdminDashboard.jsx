@@ -810,8 +810,8 @@ const AdminDashboard = memo(() => {
 
                     {showNotifications && (
                       <div
-                        className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl overflow-hidden z-50 ${
-                          theme === 'dark' ? 'bg-slate-900 border border-white/10' : 'bg-white border border-slate-200'
+                        className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-2xl overflow-hidden z-[100] ${
+                          theme === 'dark' ? 'bg-slate-900 border border-white/10 backdrop-blur-md' : 'bg-white border border-slate-200'
                         }`}
                         role="region"
                         aria-label="Notifications panel"
