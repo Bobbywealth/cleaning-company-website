@@ -363,41 +363,28 @@ export const initializeDatabase = async () => {
     if (serviceSeqExists.rows.length === 0) {
       await pool.query(`
         INSERT INTO service_sms_sequences (service_type, sequence_order, delay_hours, message_template, trigger_status, is_active) VALUES
-        -- RESIDENTIAL SEQUENCES
-        ('residential', 1, 0, 'Hi {{name}}! 🏠 Thanks for requesting a quote from 360 Cleaning! We will send your personalized price within 2 hours. Questions? Text back or call (862) 285-4949', 'New', true),
-        ('residential', 2, 120, 'Hi {{name}}! Just checking in on your residential cleaning quote 🧹 Did you have any questions about our services or pricing? I am here to help!', 'New', true),
-        ('residential', 3, 240, 'Hi {{name}}! 🌟 Our team has availability this week for residential cleaning! Ready to get your home sparkling? Call/text (862) 285-4949 to schedule', 'New', true),
-        ('residential', 4, 1440, 'Hi {{name}}! ⏰ Just a reminder - we have openings later this week! Book now and mention this text for 10% off your first clean. Call (862) 285-4949', 'New', true),
-        ('residential', 5, 2880, 'Hi {{name}}! 🎁 Special offer - mention CLEAN10 for 10% off your first cleaning with us! This week only. Call (862) 285-4949 to claim', 'New', true),
-
-        -- COMMERCIAL SEQUENCES
-        ('commercial', 1, 0, 'Hi {{name}}! 🏢 Thanks for your commercial cleaning inquiry. We service offices, restaurants, retail & more across NJ. Your quote ready in 2 hours!', 'New', true),
-        ('commercial', 2, 120, 'Hi {{name}}! Following up on your commercial cleaning needs 💼 Our business team is ready to discuss flexible scheduling (before/after hours, weekends).', 'New', true),
-        ('commercial', 3, 240, 'Hi {{name}}! 🧹 Quick question - have you had a chance to review your quote? We offer competitive pricing for businesses. Let me know if you have questions!', 'New', true),
-        ('commercial', 4, 1440, 'Hi {{name}}! 💼 Final follow-up: We service 50+ NJ businesses. Questions about our commercial services? Call (862) 285-4949 - let us chat!', 'New', true),
-
-        -- DEEP CLEANING SEQUENCES
-        ('deep', 1, 0, 'Hi {{name}}! ✨ Thanks for your deep cleaning interest! We go above & beyond - scrubbed grout, clean cabinets, detailed baseboards. Price coming in 2 hours!', 'New', true),
-        ('deep', 2, 120, 'Hi {{name}}! Your deep cleaning price is ready ✨ We specialize in kitchens, bathrooms, garages & hard-to-reach areas. Questions? I am here!', 'New', true),
-        ('deep', 3, 240, 'Hi {{name}}! 🧽 Deep cleaning is our specialty! Have you decided? We have openings this week and offer a satisfaction guarantee. Call (862) 285-4949!', 'New', true),
-
-        -- MOVE IN/OUT SEQUENCES
-        ('move', 1, 0, 'Hi {{name}}! 🚚 Thanks for your move in/out cleaning request! We make spaces move-in ready & help protect your security deposit. Price in 2 hours!', 'New', true),
-        ('move', 2, 120, 'Hi {{name}}! 🏠 Moving soon? Our move-in/out service includes deep cleaning, carpet treatment & debris removal. Your quote is ready!', 'New', true),
-        ('move', 3, 240, 'Hi {{name}}! ⏰ Don\'t risk losing your security deposit! We have availability this week. Call (862) 285-4949 to schedule your move-out clean!', 'New', true),
-
-        -- POST-CONSTRUCTION SEQUENCES
-        ('construction', 1, 0, 'Hi {{name}}! 🏗️ Thanks for your post-construction cleanup request! We handle debris removal, dust & detailed finishing. Price coming in 2 hours!', 'New', true),
-        ('construction', 2, 120, 'Hi {{name}}! Your post-construction price is ready 🏗️ We remove construction dust, paint splatter & debris. Call (862) 285-4949!', 'New', true),
-        ('construction', 3, 240, 'Hi {{name}}! 💪 Ready for final walkthrough? We guarantee you will pass inspection. Schedule this week - we have openings! Call (862) 285-4949', 'New', true),
-
-        -- STALE LEADS RE-ENGAGEMENT
-        ('stale', 1, 0, 'Hi {{name}}! 👋 It\'s been a while since we connected. Still thinking about cleaning services? We have new availability this week!', 'Stale', true),
-        ('stale', 2, 4320, 'Hi {{name}}! 🎁 Time-sensitive offer: 20% off any cleaning booked this week! Use code CLEAN20. Limited time only - claim by calling (862) 285-4949', 'Stale', true),
-
-        -- CONVERTED/WIN-BACK SEQUENCES
-        ('winback', 1, 43200, 'Hi {{name}}! 👋 It\'s been a while since your last cleaning with 360 Cleaning! Time for another refresh? We have availability this week.', 'Converted', true),
-        ('winback', 2, 51840, 'Hi {{name}}! 🌟 Miss us? Your next cleaning is on us - just pay for the service and get 1 free add-on of your choice! Call to book.', 'Converted', true)
+        ('residential', 1, 0, 'Hi {{name}}! Thanks for requesting a quote from 360 Cleaning! We will send your personalized price within 2 hours. Questions? Text back or call (862) 285-4949', 'New', true),
+        ('residential', 2, 120, 'Hi {{name}}! Just checking in on your residential cleaning quote. Did you have any questions about our services or pricing?', 'New', true),
+        ('residential', 3, 240, 'Hi {{name}}! Our team has availability this week for residential cleaning! Ready to get your home sparkling? Call/text (862) 285-4949 to schedule', 'New', true),
+        ('residential', 4, 1440, 'Hi {{name}}! Just a reminder - we have openings later this week! Book now and mention this text for 10% off your first clean. Call (862) 285-4949', 'New', true),
+        ('residential', 5, 2880, 'Hi {{name}}! Special offer - mention CLEAN10 for 10% off your first cleaning with us! This week only. Call (862) 285-4949 to claim', 'New', true),
+        ('commercial', 1, 0, 'Hi {{name}}! Thanks for your commercial cleaning inquiry. We service offices, restaurants, retail & more across NJ. Your quote ready in 2 hours!', 'New', true),
+        ('commercial', 2, 120, 'Hi {{name}}! Following up on your commercial cleaning needs. Our business team is ready to discuss flexible scheduling (before/after hours, weekends).', 'New', true),
+        ('commercial', 3, 240, 'Hi {{name}}! Quick question - have you had a chance to review your quote? We offer competitive pricing for businesses.', 'New', true),
+        ('commercial', 4, 1440, 'Hi {{name}}! Final follow-up: We service 50+ NJ businesses. Questions about our commercial services? Call (862) 285-4949', 'New', true),
+        ('deep', 1, 0, 'Hi {{name}}! Thanks for your deep cleaning interest! We go above & beyond - scrubbed grout, clean cabinets, detailed baseboards. Price coming in 2 hours!', 'New', true),
+        ('deep', 2, 120, 'Hi {{name}}! Your deep cleaning price is ready. We specialize in kitchens, bathrooms, garages & hard-to-reach areas. Questions?', 'New', true),
+        ('deep', 3, 240, 'Hi {{name}}! Deep cleaning is our specialty! Have you decided? We have openings this week and offer a satisfaction guarantee. Call (862) 285-4949!', 'New', true),
+        ('move', 1, 0, 'Hi {{name}}! Thanks for your move in/out cleaning request! We make spaces move-in ready & help protect your security deposit. Price in 2 hours!', 'New', true),
+        ('move', 2, 120, 'Hi {{name}}! Moving soon? Our move-in/out service includes deep cleaning, carpet treatment & debris removal. Your quote is ready!', 'New', true),
+        ('move', 3, 240, 'Hi {{name}}! Do not risk losing your security deposit! We have availability this week. Call (862) 285-4949 to schedule your move-out clean!', 'New', true),
+        ('construction', 1, 0, 'Hi {{name}}! Thanks for your post-construction cleanup request! We handle debris removal, dust & detailed finishing. Price coming in 2 hours!', 'New', true),
+        ('construction', 2, 120, 'Hi {{name}}! Your post-construction price is ready. We remove construction dust, paint splatter & debris. Call (862) 285-4949!', 'New', true),
+        ('construction', 3, 240, 'Hi {{name}}! Ready for final walkthrough? We guarantee you will pass inspection. Schedule this week - we have openings! Call (862) 285-4949', 'New', true),
+        ('stale', 1, 0, 'Hi {{name}}! It has been a while since we connected. Still thinking about cleaning services? We have new availability this week!', 'Stale', true),
+        ('stale', 2, 4320, 'Hi {{name}}! Time-sensitive offer: 20% off any cleaning booked this week! Use code CLEAN20. Limited time only - claim by calling (862) 285-4949', 'Stale', true),
+        ('winback', 1, 43200, 'Hi {{name}}! It has been a while since your last cleaning with 360 Cleaning! Time for another refresh? We have availability this week.', 'Converted', true),
+        ('winback', 2, 51840, 'Hi {{name}}! Miss us? Your next cleaning is on us - just pay for the service and get 1 free add-on of your choice! Call to book.', 'Converted', true)
       `);
       console.log('✓ Service-specific SMS sequences created');
     }
