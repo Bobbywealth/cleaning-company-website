@@ -38,7 +38,8 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  HelpCircle
+  HelpCircle,
+  Zap
 } from 'lucide-react';
 
 const LeadsList = lazy(() => import('@/components/LeadsList'));
@@ -49,6 +50,8 @@ const CrewManagement = lazy(() => import('@/components/CrewManagement'));
 const Invoices = lazy(() => import('@/components/Invoices'));
 const RecurringClients = lazy(() => import('@/components/RecurringClients'));
 const Reports = lazy(() => import('@/components/Reports'));
+const EnhancedReports = lazy(() => import('@/components/EnhancedReports'));
+const WorkflowAutomation = lazy(() => import('@/components/WorkflowAutomation'));
 
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(() => {
@@ -586,6 +589,7 @@ const AdminDashboard = memo(() => {
     { id: 'invoices', label: 'Invoices', icon: CreditCard },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
+    { id: 'automation', label: 'Automation', icon: Zap },
     { id: 'customers', label: 'Customers', icon: Star },
   ], [stats.newLeads, jobs.length]);
 
@@ -1175,6 +1179,12 @@ const AdminDashboard = memo(() => {
               {activeTab === 'marketing' && (
                 <div id="panel-marketing" role="tabpanel" aria-labelledby="tab-marketing">
                   <MarketingCenter theme={theme} />
+                </div>
+              )}
+
+              {activeTab === 'automation' && (
+                <div id="panel-automation" role="tabpanel" aria-labelledby="tab-automation">
+                  <WorkflowAutomation theme={theme} />
                 </div>
               )}
 

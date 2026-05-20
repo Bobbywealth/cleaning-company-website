@@ -693,6 +693,783 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
   }
 });
 
+// ============ AUTOMATED WORKFLOWS ROUTES ============
+
+// Get all workflows
+app.get('/api/workflows', authenticateToken, async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM automated_workflows ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get workflows error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get single workflow
+app.get('/api/workflows/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await query('SELECT * FROM automated_workflows WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Workflow not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Get workflow error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Create workflow
+app.post('/api/workflows', authenticateToken, async (req, res) => {
+  try {
+    const { name, description, trigger_type, trigger_config, action_type, action_config, is_active } = req.body;
+
+    const result = await query(
+      `INSERT INTO automated_workflows (name, description, trigger_type, trigger_config, action_type, action_config, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [name, description, trigger_type, JSON.stringify(trigger_config || {}), action_type, JSON.stringify(action_config || {}), is_active !== false]
+    );
+
+    await query(
+      `INSERT INTO audit_log (action_type, entity_type, entity_id, details, performed_by)
+       VALUES ($1, $2, $3, $4, $5)`,
+      ['CREATE_WORKFLOW', 'automated_workflows', result.rows[0].id, JSON.stringify({ name }), req.user.username]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create workflow error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update workflow
+app.put('/api/workflows/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, trigger_type, trigger_config, action_type, action_config, is_active } = req.body;
+
+    const result = await query(
+      `UPDATE automated_workflows
+       SET name = COALESCE($1, name),
+           description = COALESCE($2, description),
+           trigger_type = COALESCE($3, trigger_type),
+           trigger_config = COALESCE($4, trigger_config),
+           action_type = COALESCE($5, action_type),
+           action_config = COALESCE($6, action_config),
+           is_active = COALESCE($7, is_active),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8 RETURNING *`,
+      [name, description, trigger_type, trigger_config ? JSON.stringify(trigger_config) : null, action_type, action_config ? JSON.stringify(action_config) : null, is_active, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Workflow not found' });
+    }
+
+    await query(
+      `INSERT INTO audit_log (action_type, entity_type, entity_id, details, performed_by)
+       VALUES ($1, $2, $3, $4, $5)`,
+      ['UPDATE_WORKFLOW', 'automated_workflows', id, JSON.stringify(req.body), req.user.username]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update workflow error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete workflow
+app.delete('/api/workflows/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM automated_workflows WHERE id = $1', [id]);
+
+    await query(
+      `INSERT INTO audit_log (action_type, entity_type, entity_id, details, performed_by)
+       VALUES ($1, $2, $3, $4, $5)`,
+      ['DELETE_WORKFLOW', 'automated_workflows', id, JSON.stringify({ id }), req.user.username]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete workflow error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Run a specific workflow manually
+app.post('/api/workflows/:id/run', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const workflowResult = await query('SELECT * FROM automated_workflows WHERE id = $1', [id]);
+
+    if (workflowResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Workflow not found' });
+    }
+
+    const workflow = workflowResult.rows[0];
+    const results = { executed: false, actions: [], errors: [] };
+
+    // Execute based on action_type
+    switch (workflow.action_type) {
+      case 'create_recurring_jobs':
+        results.actions = await processRecurringJobCreation();
+        results.executed = true;
+        break;
+      case 'check_overdue_invoices':
+        results.actions = await processOverdueInvoices();
+        results.executed = true;
+        break;
+      case 'check_stale_leads':
+        results.actions = await processStaleLeads(workflow.action_config?.threshold_hours || 72);
+        results.executed = true;
+        break;
+      case 'send_lead_followup':
+        results.actions = await processLeadFollowup();
+        results.executed = true;
+        break;
+      default:
+        results.errors.push(`Unknown action type: ${workflow.action_type}`);
+    }
+
+    // Update workflow run stats
+    await query(
+      `UPDATE automated_workflows SET last_run_at = CURRENT_TIMESTAMP, run_count = run_count + 1 WHERE id = $1`,
+      [id]
+    );
+
+    await query(
+      `INSERT INTO audit_log (action_type, entity_type, entity_id, details, performed_by)
+       VALUES ($1, $2, $3, $4, $5)`,
+      ['RUN_WORKFLOW', 'automated_workflows', id, JSON.stringify(results), req.user.username]
+    );
+
+    res.json({ success: true, workflow_id: id, results });
+  } catch (error) {
+    console.error('Run workflow error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Run all due workflows
+app.post('/api/workflows/run-all', authenticateToken, async (req, res) => {
+  try {
+    const results = [];
+    const workflows = await query('SELECT * FROM automated_workflows WHERE is_active = true');
+
+    for (const workflow of workflows.rows) {
+      try {
+        let actionResult = [];
+        switch (workflow.action_type) {
+          case 'create_recurring_jobs':
+            actionResult = await processRecurringJobCreation();
+            break;
+          case 'check_overdue_invoices':
+            actionResult = await processOverdueInvoices();
+            break;
+          case 'check_stale_leads':
+            actionResult = await processStaleLeads(workflow.action_config?.threshold_hours || 72);
+            break;
+          case 'send_lead_followup':
+            actionResult = await processLeadFollowup();
+            break;
+        }
+
+        await query(
+          `UPDATE automated_workflows SET last_run_at = CURRENT_TIMESTAMP, run_count = run_count + 1 WHERE id = $1`,
+          [workflow.id]
+        );
+
+        results.push({ workflow_id: workflow.id, name: workflow.name, success: true, actions: actionResult });
+      } catch (err) {
+        results.push({ workflow_id: workflow.id, name: workflow.name, success: false, error: err.message });
+      }
+    }
+
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error('Run all workflows error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ SMS SEQUENCES ROUTES ============
+
+app.get('/api/sms-sequences', authenticateToken, async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM sms_sequences ORDER BY trigger_status, step_order');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get SMS sequences error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/sms-sequences', authenticateToken, async (req, res) => {
+  try {
+    const { name, trigger_status, step_order, delay_hours, message_template, is_active } = req.body;
+
+    const result = await query(
+      `INSERT INTO sms_sequences (name, trigger_status, step_order, delay_hours, message_template, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, trigger_status, step_order, delay_hours || 0, message_template, is_active !== false]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create SMS sequence error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/sms-sequences/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, trigger_status, step_order, delay_hours, message_template, is_active } = req.body;
+
+    const result = await query(
+      `UPDATE sms_sequences
+       SET name = COALESCE($1, name),
+           trigger_status = COALESCE($2, trigger_status),
+           step_order = COALESCE($3, step_order),
+           delay_hours = COALESCE($4, delay_hours),
+           message_template = COALESCE($5, message_template),
+           is_active = COALESCE($6, is_active)
+       WHERE id = $7 RETURNING *`,
+      [name, trigger_status, step_order, delay_hours, message_template, is_active, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'SMS sequence not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update SMS sequence error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/sms-sequences/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM sms_sequences WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete SMS sequence error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ CREW ZONES ROUTES ============
+
+app.get('/api/crew-zones', authenticateToken, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT cz.*, cm.name as crew_name
+      FROM crew_zones cz
+      LEFT JOIN crew_members cm ON cz.crew_id = cm.id
+      ORDER BY cz.zone_name
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get crew zones error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/crew-zones', authenticateToken, async (req, res) => {
+  try {
+    const { crew_id, zone_name, zip_codes, priority } = req.body;
+
+    const result = await query(
+      `INSERT INTO crew_zones (crew_id, zone_name, zip_codes, priority)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [crew_id, zone_name, zip_codes || [], priority || 0]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create crew zone error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/crew-zones/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { crew_id, zone_name, zip_codes, priority } = req.body;
+
+    const result = await query(
+      `UPDATE crew_zones
+       SET crew_id = COALESCE($1, crew_id),
+           zone_name = COALESCE($2, zone_name),
+           zip_codes = COALESCE($3, zip_codes),
+           priority = COALESCE($4, priority)
+       WHERE id = $5 RETURNING *`,
+      [crew_id, zone_name, zip_codes, priority, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Crew zone not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update crew zone error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/crew-zones/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM crew_zones WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete crew zone error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Auto-assign crew to job based on zone and availability
+app.post('/api/crew/auto-assign', authenticateToken, async (req, res) => {
+  try {
+    const { job_id } = req.body;
+
+    const jobResult = await query('SELECT * FROM jobs WHERE id = $1', [job_id]);
+    if (jobResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    const job = jobResult.rows[0];
+
+    // Find available crew in the same zone
+    const availableCrew = await query(`
+      SELECT cm.*, cz.zone_name, cz.zip_codes
+      FROM crew_members cm
+      LEFT JOIN crew_zones cz ON cm.id = cz.crew_id
+      WHERE cm.status = 'available'
+      ORDER BY cm.jobs_today ASC, cz.priority DESC
+      LIMIT 1
+    `);
+
+    if (availableCrew.rows.length === 0) {
+      return res.json({ success: false, message: 'No available crew found' });
+    }
+
+    const assignedCrew = availableCrew.rows[0];
+
+    await query(
+      `UPDATE jobs SET crew_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [assignedCrew.id, job_id]
+    );
+
+    await query(
+      `UPDATE crew_members SET jobs_today = jobs_today + 1 WHERE id = $1`,
+      [assignedCrew.id]
+    );
+
+    res.json({ success: true, crew_id: assignedCrew.id, crew_name: assignedCrew.name });
+  } catch (error) {
+    console.error('Auto-assign crew error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ NOTIFICATIONS ROUTES ============
+
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+  try {
+    const { limit = 50, offset = 0, type, status } = req.query;
+    let query_str = 'SELECT * FROM notifications';
+    const params = [];
+    const conditions = [];
+
+    if (type) {
+      params.push(type);
+      conditions.push(`type = $${params.length}`);
+    }
+    if (status) {
+      params.push(status);
+      conditions.push(`delivery_status = $${params.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query_str += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query_str += ' ORDER BY created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
+    params.push(parseInt(limit), parseInt(offset));
+
+    const result = await query(query_str, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get notifications error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/notifications', authenticateToken, async (req, res) => {
+  try {
+    const { type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id } = req.body;
+
+    const result = await query(
+      `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create notification error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/notifications/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { delivery_status, sent_at } = req.body;
+
+    const result = await query(
+      `UPDATE notifications
+       SET delivery_status = COALESCE($1, delivery_status),
+           sent_at = COALESCE($2, sent_at)
+       WHERE id = $3 RETURNING *`,
+      [delivery_status, sent_at, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update notification error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ AUDIT LOG ROUTES ============
+
+app.get('/api/audit-log', authenticateToken, async (req, res) => {
+  try {
+    const { limit = 100, offset = 0, action_type, entity_type } = req.query;
+    let query_str = 'SELECT * FROM audit_log';
+    const params = [];
+    const conditions = [];
+
+    if (action_type) {
+      params.push(action_type);
+      conditions.push(`action_type = $${params.length}`);
+    }
+    if (entity_type) {
+      params.push(entity_type);
+      conditions.push(`entity_type = $${params.length}`);
+    }
+
+    if (conditions.length > 0) {
+      query_str += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query_str += ' ORDER BY created_at DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
+    params.push(parseInt(limit), parseInt(offset));
+
+    const result = await query(query_str, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get audit log error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ ENHANCED STATS ROUTES ============
+
+app.get('/api/stats/extended', authenticateToken, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+    // Revenue stats
+    const revenueResult = await query(`
+      SELECT
+        COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END), 0) as pending_revenue,
+        COALESCE(SUM(CASE WHEN status = 'overdue' THEN amount ELSE 0 END), 0) as overdue_revenue
+      FROM invoices
+    `);
+
+    // Jobs stats
+    const jobsResult = await query(`
+      SELECT
+        COUNT(*) as total_jobs,
+        COUNT(CASE WHEN status = 'Completed' THEN 1 END) as completed_jobs,
+        COUNT(CASE WHEN status IN ('Pending', 'Confirmed', 'Scheduled') THEN 1 END) as upcoming_jobs,
+        COUNT(CASE WHEN date = $1 THEN 1 END) as today_jobs
+      FROM jobs
+    `, [today]);
+
+    // Crew stats
+    const crewResult = await query(`
+      SELECT
+        COUNT(*) as total_crew,
+        COUNT(CASE WHEN status = 'available' THEN 1 END) as available_crew,
+        COUNT(CASE WHEN status = 'busy' THEN 1 END) as busy_crew
+      FROM crew_members
+    `);
+
+    // Lead conversion stats
+    const leadsResult = await query(`
+      SELECT
+        COUNT(*) as total_leads,
+        COUNT(CASE WHEN status = 'New' THEN 1 END) as new_leads,
+        COUNT(CASE WHEN status = 'Contacted' THEN 1 END) as contacted_leads,
+        COUNT(CASE WHEN status = 'Converted' THEN 1 END) as converted_leads
+      FROM leads
+    `);
+
+    // Revenue by day (last 7 days)
+    const revenueByDayResult = await query(`
+      SELECT
+        DATE(created_at) as date,
+        COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) as revenue
+      FROM invoices
+      WHERE created_at >= $1
+      GROUP BY DATE(created_at)
+      ORDER BY date
+    `, [weekAgo]);
+
+    // Jobs by day (last 7 days)
+    const jobsByDayResult = await query(`
+      SELECT
+        date as job_date,
+        COUNT(*) as jobs
+      FROM jobs
+      WHERE date >= $1
+      GROUP BY date
+      ORDER BY date
+    `, [weekAgo]);
+
+    // Recurring revenue
+    const recurringResult = await query(`
+      SELECT
+        COUNT(*) as total_recurring,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_recurring
+      FROM recurring_clients
+    `);
+
+    // Lead sources breakdown
+    const leadSourcesResult = await query(`
+      SELECT
+        COALESCE(lead_source, 'Unknown') as source,
+        COUNT(*) as count
+      FROM leads
+      GROUP BY lead_source
+      ORDER BY count DESC
+    `);
+
+    // Service type breakdown
+    const serviceBreakdownResult = await query(`
+      SELECT
+        COALESCE(service, 'Unknown') as service,
+        COUNT(*) as count
+      FROM jobs
+      GROUP BY service
+      ORDER BY count DESC
+      LIMIT 10
+    `);
+
+    res.json({
+      revenue: {
+        total: parseFloat(revenueResult.rows[0].total_revenue) || 0,
+        pending: parseFloat(revenueResult.rows[0].pending_revenue) || 0,
+        overdue: parseFloat(revenueResult.rows[0].overdue_revenue) || 0
+      },
+      jobs: {
+        total: parseInt(jobsResult.rows[0].total_jobs) || 0,
+        completed: parseInt(jobsResult.rows[0].completed_jobs) || 0,
+        upcoming: parseInt(jobsResult.rows[0].upcoming_jobs) || 0,
+        today: parseInt(jobsResult.rows[0].today_jobs) || 0
+      },
+      crew: {
+        total: parseInt(crewResult.rows[0].total_crew) || 0,
+        available: parseInt(crewResult.rows[0].available_crew) || 0,
+        busy: parseInt(crewResult.rows[0].busy_crew) || 0
+      },
+      leads: {
+        total: parseInt(leadsResult.rows[0].total_leads) || 0,
+        new: parseInt(leadsResult.rows[0].new_leads) || 0,
+        contacted: parseInt(leadsResult.rows[0].contacted_leads) || 0,
+        converted: parseInt(leadsResult.rows[0].converted_leads) || 0,
+        conversionRate: parseInt(leadsResult.rows[0].total_leads) > 0
+          ? Math.round((parseInt(leadsResult.rows[0].converted_leads) / parseInt(leadsResult.rows[0].total_leads)) * 100)
+          : 0
+      },
+      recurring: {
+        total: parseInt(recurringResult.rows[0].total_recurring) || 0,
+        active: parseInt(recurringResult.rows[0].active_recurring) || 0
+      },
+      revenueByDay: revenueByDayResult.rows,
+      jobsByDay: jobsByDayResult.rows,
+      leadSources: leadSourcesResult.rows,
+      serviceBreakdown: serviceBreakdownResult.rows
+    });
+  } catch (error) {
+    console.error('Get extended stats error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ WORKFLOW PROCESSING HELPERS ============
+
+async function processRecurringJobCreation() {
+  const results = [];
+  const today = new Date().toISOString().split('T')[0];
+
+  const recurringClients = await query(`
+    SELECT * FROM recurring_clients
+    WHERE status = 'active' AND next_date <= $1
+  `, [today]);
+
+  for (const client of recurringClients.rows) {
+    try {
+      const jobId = `AUTO-${Date.now()}-${client.id}`;
+      const serviceName = `${client.plan.charAt(0).toUpperCase() + client.plan.slice(1)} Clean (Recurring)`;
+
+      await query(`
+        INSERT INTO jobs (client, phone, email, service, date, status, notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `, [client.name, client.phone, client.email, serviceName, today, 'Scheduled', `Auto-generated from recurring client #${client.id}`]);
+
+      let nextDate = new Date(today);
+      if (client.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+      else if (client.frequency === 'biweekly') nextDate.setDate(nextDate.getDate() + 14);
+      else nextDate.setMonth(nextDate.getMonth() + 1);
+
+      await query(`
+        UPDATE recurring_clients SET next_date = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
+      `, [nextDate.toISOString().split('T')[0], client.id]);
+
+      await query(`
+        INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+      `, ['job_created', client.name, client.phone, client.email, `Auto-scheduled: ${serviceName} for ${today}`, 'recurring_client', client.id, 'sent']);
+
+      results.push({ client_id: client.id, client_name: client.name, job_created: true });
+    } catch (err) {
+      results.push({ client_id: client.id, client_name: client.name, job_created: false, error: err.message });
+    }
+  }
+
+  return results;
+}
+
+async function processOverdueInvoices() {
+  const results = [];
+  const today = new Date().toISOString().split('T')[0];
+
+  const overdueInvoices = await query(`
+    SELECT * FROM invoices
+    WHERE status = 'pending' AND due_date < $1
+  `, [today]);
+
+  for (const invoice of overdueInvoices.rows) {
+    try {
+      await query(`
+        UPDATE invoices SET status = 'overdue', updated_at = CURRENT_TIMESTAMP WHERE id = $1
+      `, [invoice.id]);
+
+      await query(`
+        INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+      `, ['invoice_overdue', invoice.client, invoice.phone, invoice.email,
+          `Invoice #${invoice.id} is overdue. Amount: $${invoice.amount}. Please remit payment.`,
+          'invoice', invoice.id, 'sent']);
+
+      results.push({ invoice_id: invoice.id, marked_overdue: true });
+    } catch (err) {
+      results.push({ invoice_id: invoice.id, marked_overdue: false, error: err.message });
+    }
+  }
+
+  return results;
+}
+
+async function processStaleLeads(thresholdHours = 72) {
+  const results = [];
+  const thresholdDate = new Date(Date.now() - thresholdHours * 60 * 60 * 1000);
+
+  const staleLeads = await query(`
+    SELECT * FROM leads
+    WHERE status IN ('New', 'Contacted') AND updated_at < $1
+  `, [thresholdDate.toISOString()]);
+
+  for (const lead of staleLeads.rows) {
+    try {
+      await query(`
+        INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+      `, ['stale_lead', lead.name, lead.phone, lead.email,
+          `Stale lead alert: ${lead.name} (${lead.phone}) - No activity for ${thresholdHours}+ hours. Status: ${lead.status}`,
+          'lead', lead.id, 'sent']);
+
+      results.push({ lead_id: lead.id, lead_name: lead.name, alerted: true });
+    } catch (err) {
+      results.push({ lead_id: lead.id, lead_name: lead.name, alerted: false, error: err.message });
+    }
+  }
+
+  return results;
+}
+
+async function processLeadFollowup() {
+  const results = [];
+  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+
+  const newLeads = await query(`
+    SELECT * FROM leads
+    WHERE status = 'New' AND created_at < $1
+  `, [fourHoursAgo.toISOString()]);
+
+  const sequences = await query(`
+    SELECT * FROM sms_sequences
+    WHERE trigger_status = 'New' AND is_active = true
+    ORDER BY step_order
+  `);
+
+  for (const lead of newLeads.rows) {
+    for (const seq of sequences.rows) {
+      if (seq.delay_hours > 0) {
+        const seqThreshold = new Date(Date.now() - seq.delay_hours * 60 * 60 * 1000);
+        if (new Date(lead.created_at) > seqThreshold) continue;
+      }
+
+      try {
+        const message = seq.message_template
+          .replace(/{{name}}/g, lead.name)
+          .replace(/{{phone}}/g, lead.phone);
+
+        await query(`
+          INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
+        `, ['lead_followup', lead.name, lead.phone, lead.email, message, 'lead', lead.id, 'sent']);
+
+        results.push({ lead_id: lead.id, lead_name: lead.name, sequence: seq.name, sent: true });
+      } catch (err) {
+        results.push({ lead_id: lead.id, lead_name: lead.name, sequence: seq.name, sent: false, error: err.message });
+      }
+    }
+  }
+
+  return results;
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
