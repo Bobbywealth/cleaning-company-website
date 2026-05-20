@@ -3,12 +3,14 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import { query, initializeDatabase } from './db.js';
 
 dotenv.config();
 
 // Initialize Stripe conditionally (only if API key is available)
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
   : null;
 
@@ -27,6 +29,37 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+// Create HTTP server with Socket.IO
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'],
+    methods: ['GET', 'POST'],
+  },
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+
+  socket.on('chat_message', (data) => {
+    console.log('Chat message received:', data);
+    // Broadcast to all clients except sender
+    socket.broadcast.emit('chat_message', {
+      type: 'chat_message',
+      chatId: data.chatId,
+      text: data.text,
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+// Make io accessible in routes
+app.set('io', io);
 
 // Auth middleware
 const authenticateToken = (req, res, next) => {
@@ -575,11 +608,12 @@ const startServer = async () => {
   try {
     console.log('🚀 Initializing database...');
     await initializeDatabase();
-    
-    app.listen(PORT, () => {
+
+    httpServer.listen(PORT, () => {
       console.log(`\n✅ Server running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
       console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`💬 Socket.IO ready for live chat`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

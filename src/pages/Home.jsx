@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import ServiceAreaMap from '@/components/ServiceAreaMap';
+import LiveChat from '@/components/LiveChat';
 
 // Dynamic next-available scheduling text
 const getNextAvailable = () => {
@@ -628,6 +630,8 @@ const Home = () => {
         </footer>
       </main>
 
+      <ServiceAreaMap />
+
       {/* Sticky Mobile CTA Bar - Optimized for Mobile Users */}
       <div className="mobile-sticky-cta md:hidden">
         <div className="flex gap-2 max-w-lg mx-auto">
@@ -648,6 +652,8 @@ const Home = () => {
           </button>
         </div>
       </div>
+
+      <LiveChat />
     </div>
   );
 };

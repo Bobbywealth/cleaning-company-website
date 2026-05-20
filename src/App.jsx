@@ -7,6 +7,7 @@ import QuotePage from './pages/QuotePage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import OnlineBooking from './components/OnlineBooking';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/quote" element={<QuotePage />} />
+          <Route path="/book" element={<OnlineBooking />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route
