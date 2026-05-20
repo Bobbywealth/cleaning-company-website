@@ -169,7 +169,7 @@ const StatCard = memo(({ icon: Icon, label, value, trend, trendValue, color, the
 
   return (
     <Card
-      className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl overflow-hidden group hover:scale-[1.02] transition-all duration-200`}
+      className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl overflow-hidden group hover:scale-[1.02] transition-all duration-200`}
       role="figure"
       aria-label={`${label}: ${value}`}
     >
@@ -715,11 +715,13 @@ const AdminDashboard = memo(() => {
 
   return (
     <ToastProvider>
-      <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
-        <div className={`fixed inset-0 pointer-events-none opacity-40 ${theme === 'dark' ? '' : 'opacity-10'}`}>
-          <div className="absolute top-0 left-1/4 h-72 w-72 rounded-full bg-cyan-500 blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 h-72 w-72 rounded-full bg-blue-700 blur-3xl" />
-        </div>
+      <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-gradient-to-br from-slate-50 via-white to-cyan-50 text-slate-900'}`}>
+        {theme === 'dark' && (
+          <div className="fixed inset-0 pointer-events-none opacity-40">
+            <div className="absolute top-0 left-1/4 h-72 w-72 rounded-full bg-cyan-500 blur-3xl" />
+            <div className="absolute bottom-20 right-1/4 h-72 w-72 rounded-full bg-blue-700 blur-3xl" />
+          </div>
+        )}
 
         <Sidebar
           tabs={tabs}
@@ -735,7 +737,7 @@ const AdminDashboard = memo(() => {
 
         <div className={`transition-all duration-300 ${collapsed ? 'md:ml-16' : 'md:ml-64'}`}>
           <header
-            className={`relative z-10 border-b ${theme === 'dark' ? 'border-white/10 bg-slate-950/75' : 'border-slate-200 bg-white'} backdrop-blur-xl sticky top-0`}
+            className={`relative z-10 border-b shadow-sm ${theme === 'dark' ? 'border-white/10 bg-slate-950/75' : 'border-slate-200/50 bg-white/80 backdrop-blur-xl sticky top-0'}`}
           >
             <div className="max-w-7xl mx-auto px-4 md:px-5 py-3 md:py-4">
               <div className="flex items-center justify-between">
@@ -1002,7 +1004,7 @@ const AdminDashboard = memo(() => {
                   </div>
 
                   <div className="grid lg:grid-cols-2 gap-6 mb-6">
-                    <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                    <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                       <CardContent className="p-4 md:p-6">
                         <div className="flex justify-between items-center mb-4">
                           <h2 className="text-lg font-bold">Recent Leads</h2>
@@ -1047,7 +1049,7 @@ const AdminDashboard = memo(() => {
                       </CardContent>
                     </Card>
 
-                    <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                    <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                       <CardContent className="p-4 md:p-6">
                         <div className="flex justify-between items-center mb-4">
                           <h2 className="text-lg font-bold">Upcoming Jobs</h2>
@@ -1094,7 +1096,7 @@ const AdminDashboard = memo(() => {
                     </Card>
                   </div>
 
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <h2 className="text-lg font-bold mb-4">Quick Access</h2>
                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -1124,7 +1126,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'leads' && (
                 <div id="panel-leads" role="tabpanel" aria-labelledby="tab-leads">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <LeadsList
                         searchQuery={searchQuery}
@@ -1138,7 +1140,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'jobs' && (
                 <div id="panel-jobs" role="tabpanel" aria-labelledby="tab-jobs">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <JobsManager theme={theme} />
                     </CardContent>
@@ -1148,7 +1150,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'crew' && (
                 <div id="panel-crew" role="tabpanel" aria-labelledby="tab-crew">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <CrewManagement theme={theme} />
                     </CardContent>
@@ -1158,7 +1160,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'invoices' && (
                 <div id="panel-invoices" role="tabpanel" aria-labelledby="tab-invoices">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <Invoices theme={theme} />
                     </CardContent>
@@ -1168,7 +1170,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'reports' && (
                 <div id="panel-reports" role="tabpanel" aria-labelledby="tab-reports">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <Reports theme={theme} />
                     </CardContent>
@@ -1190,7 +1192,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'customers' && (
                 <div id="panel-customers" role="tabpanel" aria-labelledby="tab-customers">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <h2 className="text-xl font-bold mb-4">All Customers</h2>
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1225,7 +1227,7 @@ const AdminDashboard = memo(() => {
 
               {activeTab === 'settings' && (
                 <div id="panel-settings" role="tabpanel" aria-labelledby="tab-settings">
-                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} rounded-2xl md:rounded-3xl`}>
+                  <Card className={`${theme === 'dark' ? 'bg-white/10 border-white/10 shadow-none' : 'bg-white border-slate-200/50 shadow-lg shadow-slate-200/50'} rounded-2xl md:rounded-3xl`}>
                     <CardContent className="p-4 md:p-6">
                       <h2 className="text-xl font-bold mb-4">Settings</h2>
                       <div className="space-y-4">
