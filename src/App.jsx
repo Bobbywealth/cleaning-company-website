@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
 import Home from './pages/Home';
 import QuotePage from './pages/QuotePage';
 import ThankYouPage from './pages/ThankYouPage';
@@ -27,10 +28,12 @@ function App() {
       <AppProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/quote" element={<QuotePage />} />
-            <Route path="/book" element={<OnlineBooking />} />
-            <Route path="/thank-you" element={<ThankYouPage />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/quote" element={<QuotePage />} />
+              <Route path="/book" element={<OnlineBooking />} />
+              <Route path="/thank-you" element={<ThankYouPage />} />
+            </Route>
             <Route path="/admin" element={<AdminLogin />} />
             <Route
               path="/admin/dashboard"
