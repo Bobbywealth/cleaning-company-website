@@ -1,28 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useApp } from '@/context/AppContext';
+import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
+import EmptyState from '@/components/ui/EmptyState';
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Briefcase,
+  DollarSign,
+  Calendar,
+  Download,
+  FileText,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  Sparkles,
+  Clock
+} from 'lucide-react';
 
 const Reports = ({ theme = 'dark' }) => {
   const { leads, jobs, invoices } = useApp();
   const [dateRange, setDateRange] = useState('30');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [focusedDateInput, setFocusedDateInput] = useState(null);
 
   const convertedLeads = leads.filter(l => l.status === 'Converted');
   const conversionRate = leads.length > 0 ? Math.round((convertedLeads.length / leads.length) * 100) : 0;
 
-  // Calculate total revenue from paid invoices
   const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0);
   
-  // Calculate average revenue per job from actual data
   const completedJobs = jobs.filter(j => j.status === 'Completed');
   const avgRevenuePerJob = completedJobs.length > 0 ? Math.round(totalRevenue / completedJobs.length) : 0;
   
-  // Calculate average jobs per day (based on completed jobs over the date range)
   const daysInRange = parseInt(dateRange);
   const avgJobsPerDay = completedJobs.length > 0 ? (completedJobs.length / daysInRange).toFixed(1) : 0;
 
-  // Calculate service breakdown from real leads
   const serviceCounts = {};
   leads.forEach(lead => {
     const service = lead.service || 'Other';
@@ -36,7 +55,6 @@ const Reports = ({ theme = 'dark' }) => {
     color: ['bg-cyan-400', 'bg-blue-400', 'bg-purple-400', 'bg-green-400', 'bg-yellow-400', 'bg-pink-400', 'bg-indigo-400'][idx % 7]
   }));
 
-  // Calculate busiest days from jobs
   const dayCounts = { 'Sunday': 0, 'Monday': 0, 'Tuesday': 0, 'Wednesday': 0, 'Thursday': 0, 'Friday': 0, 'Saturday': 0 };
   jobs.forEach(job => {
     if (job.date) {
@@ -53,7 +71,6 @@ const Reports = ({ theme = 'dark' }) => {
     .slice(0, 5)
     .map(([day, count]) => ({ day, jobs: count }));
 
-  // Calculate date range boundaries
   const getDateBounds = () => {
     const now = new Date();
     if (dateRange === 'custom' && customStartDate && customEndDate) {
@@ -69,7 +86,6 @@ const Reports = ({ theme = 'dark' }) => {
     return { start, end: now, isCustom: false };
   };
 
-  // Filter leads by date range
   const getFilteredLeads = () => {
     const { start, end } = getDateBounds();
     return leads.filter(l => {
@@ -78,7 +94,6 @@ const Reports = ({ theme = 'dark' }) => {
     });
   };
 
-  // Filter jobs by date range
   const getFilteredJobs = () => {
     const { start, end } = getDateBounds();
     return jobs.filter(j => {
@@ -87,7 +102,6 @@ const Reports = ({ theme = 'dark' }) => {
     });
   };
 
-  // Filter invoices by date range
   const getFilteredInvoices = () => {
     const { start, end } = getDateBounds();
     return invoices.filter(i => {
@@ -96,7 +110,6 @@ const Reports = ({ theme = 'dark' }) => {
     });
   };
 
-  // Calculate weekly data from real jobs
   const generateWeeklyData = () => {
     const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
     const { start: rangeStart } = getDateBounds();
@@ -132,11 +145,107 @@ const Reports = ({ theme = 'dark' }) => {
     });
   };
 
+  const handleExport = useCallback((type) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      const exportFunctions = {
+        leads: () => alert('Exporting leads report as CSV...'),
+        jobs: () => alert('Exporting jobs report as CSV...'),
+        revenue: () => alert('Generating revenue report PDF...')
+      };
+      exportFunctions[type]?.();
+      setIsLoading(false);
+    }, 500);
+  }, []);
+
+  const handleDateRangeKeyDown = useCallback((e, currentInput) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const inputs = ['start', 'end'];
+      const currentIndex = inputs.indexOf(currentInput);
+      const nextIndex = e.key === 'ArrowLeft' 
+        ? (currentIndex - 1 + inputs.length) % inputs.length
+        : (currentIndex + 1) % inputs.length;
+      setFocusedDateInput(inputs[nextIndex]);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'e' || e.key === 'E') {
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+        if (!isInputFocused) {
+          e.preventDefault();
+          document.getElementById('export-section')?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (focusedDateInput) {
+      const inputMap = {
+        start: document.getElementById('custom-start-date'),
+        end: document.getElementById('custom-end-date')
+      };
+      inputMap[focusedDateInput]?.focus();
+    }
+  }, [focusedDateInput]);
+
   const weeklyData = generateWeeklyData();
+  const hasData = leads.length > 0 || jobs.length > 0 || invoices.length > 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonCard key={i} className="h-24" />
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <SkeletonCard className="h-64" />
+          <SkeletonCard className="h-64" />
+        </div>
+        <SkeletonCard className="h-48" />
+      </div>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Reports & Analytics</h2>
+            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              Business performance insights
+            </p>
+          </div>
+        </div>
+        <EmptyState
+          icon={BarChart3}
+          title="No Data Available"
+          description="Start adding leads, jobs, and invoices to see your business analytics and reports."
+          theme={theme}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6" role="main" aria-label="Reports and Analytics">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">Reports & Analytics</h2>
@@ -144,84 +253,200 @@ const Reports = ({ theme = 'dark' }) => {
             Business performance insights
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className={`px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
-          >
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-            <option value="365">Last year</option>
-            <option value="custom">Custom Range</option>
-          </select>
+        <div 
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+          role="group"
+          aria-label="Date range selector"
+        >
+          <div className="relative">
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className={`px-4 py-2 pr-10 rounded-xl appearance-none cursor-pointer transition-all ${
+                theme === 'dark' 
+                  ? 'bg-white/10 border-white/10 text-white hover:bg-white/15' 
+                  : 'bg-white border-slate-200 text-slate-900 hover:bg-slate-50'
+              } border outline-none focus:ring-2 focus:ring-cyan-400/50`}
+              aria-label="Select date range"
+            >
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">Last year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none opacity-50" />
+          </div>
           {dateRange === 'custom' && (
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
-              />
-              <span className="text-slate-400">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className={`px-3 py-2 rounded-xl text-sm ${theme === 'dark' ? 'bg-white/10 border-white/10' : 'bg-white border-slate-200'} border outline-none`}
-              />
+            <div 
+              className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/10"
+              role="group"
+              aria-label="Custom date range inputs"
+            >
+              <div className="relative">
+                <input
+                  id="custom-start-date"
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  onKeyDown={(e) => handleDateRangeKeyDown(e, 'start')}
+                  onFocus={() => setFocusedDateInput('start')}
+                  onBlur={() => setFocusedDateInput(null)}
+                  className={`px-3 py-2 pl-9 rounded-lg text-sm transition-all ${
+                    theme === 'dark' 
+                      ? 'bg-white/10 border-white/10 text-white' 
+                      : 'bg-white border-slate-200 text-slate-900'
+                  } border outline-none focus:ring-2 focus:ring-cyan-400/50`}
+                  aria-label="Custom start date"
+                />
+                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50" />
+              </div>
+              <ArrowRight className="w-4 h-4 opacity-50" />
+              <div className="relative">
+                <input
+                  id="custom-end-date"
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  onKeyDown={(e) => handleDateRangeKeyDown(e, 'end')}
+                  onFocus={() => setFocusedDateInput('end')}
+                  onBlur={() => setFocusedDateInput(null)}
+                  className={`px-3 py-2 pl-9 rounded-lg text-sm transition-all ${
+                    theme === 'dark' 
+                      ? 'bg-white/10 border-white/10 text-white' 
+                      : 'bg-white border-slate-200 text-slate-900'
+                  } border outline-none focus:ring-2 focus:ring-cyan-400/50`}
+                  aria-label="Custom end date"
+                />
+                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50" />
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
+      <div 
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        role="list"
+        aria-label="Key performance indicators"
+      >
+        <Card 
+          className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}
+          role="listitem"
+        >
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>{getFilteredLeads().length}</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Leads in Period</p>
+            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 ${
+              theme === 'dark' ? 'bg-cyan-400/20' : 'bg-cyan-100'
+            }`}>
+              <Users className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+            </div>
+            <p className={`text-2xl sm:text-3xl font-black ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`}>
+              {getFilteredLeads().length}
+            </p>
+            <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              Leads in Period
+            </p>
           </CardContent>
         </Card>
-        <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
+        <Card 
+          className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}
+          role="listitem"
+        >
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>{conversionRate}%</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Conversion Rate</p>
+            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 ${
+              theme === 'dark' ? 'bg-green-400/20' : 'bg-green-100'
+            }`}>
+              {conversionRate >= 50 ? (
+                <TrendingUp className={`w-5 h-5 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
+              ) : (
+                <TrendingDown className={`w-5 h-5 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`} />
+              )}
+            </div>
+            <p className={`text-2xl sm:text-3xl font-black ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+              {conversionRate}%
+            </p>
+            <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              Conversion Rate
+            </p>
           </CardContent>
         </Card>
-        <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
+        <Card 
+          className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}
+          role="listitem"
+        >
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}>{getFilteredJobs().length}</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Jobs in Period</p>
+            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 ${
+              theme === 'dark' ? 'bg-purple-400/20' : 'bg-purple-100'
+            }`}>
+              <Briefcase className={`w-5 h-5 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} />
+            </div>
+            <p className={`text-2xl sm:text-3xl font-black ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`}>
+              {getFilteredJobs().length}
+            </p>
+            <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              Jobs in Period
+            </p>
           </CardContent>
         </Card>
-        <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
+        <Card 
+          className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}
+          role="listitem"
+        >
           <CardContent className="p-4 text-center">
-            <p className={`text-3xl font-black ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>${getFilteredInvoices().filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0)}</p>
-            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Revenue in Period</p>
+            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 ${
+              theme === 'dark' ? 'bg-yellow-400/20' : 'bg-yellow-100'
+            }`}>
+              <DollarSign className={`w-5 h-5 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`} />
+            </div>
+            <p className={`text-2xl sm:text-3xl font-black ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>
+              ${getFilteredInvoices().filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0)}
+            </p>
+            <p className={`text-xs sm:text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              Revenue in Period
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Weekly Performance Chart */}
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
-          <CardContent className="p-4">
-            <h3 className="font-bold mb-4">📈 Weekly Performance</h3>
-            <div className="space-y-3">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+              <h3 className="font-bold">Weekly Performance</h3>
+            </div>
+            <div className="space-y-3" role="list" aria-label="Weekly performance data">
               {weeklyData.map((week, idx) => (
-                <div key={idx} className="space-y-1">
+                <div key={idx} className="space-y-1" role="listitem">
                   <div className="flex justify-between text-sm">
                     <span className={theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{week.week}</span>
-                    <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>
-                      {week.leads} leads • {week.jobs} jobs • ${week.revenue}
+                    <span className={`flex items-center gap-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {week.leads}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="w-3 h-3" />
+                        {week.jobs}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="w-3 h-3" />
+                        {week.revenue}
+                      </span>
                     </span>
                   </div>
-                  <div className={`h-3 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                  <div 
+                    className={`h-3 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}
+                    role="progressbar"
+                    aria-valuenow={(week.revenue / 4000) * 100}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-label={`${week.week} revenue progress`}
+                  >
                     <div 
-                      className="h-3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                      className="h-3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500"
                       style={{ width: `${(week.revenue / 4000) * 100}%` }}
                     />
                   </div>
@@ -231,92 +456,144 @@ const Reports = ({ theme = 'dark' }) => {
           </CardContent>
         </Card>
 
-        {/* Service Breakdown */}
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
-          <CardContent className="p-4">
-            <h3 className="font-bold mb-4">🍰 Service Breakdown</h3>
-            <div className="space-y-3">
-              {serviceBreakdown.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                  <span className="flex-1">{item.service}</span>
-                  <span className="font-bold">{item.count}</span>
-                  <div className={`w-20 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                    <div 
-                      className={`h-2 rounded-full ${item.color}`}
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                  <span className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {item.percentage}%
-                  </span>
-                </div>
-              ))}
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className={`w-5 h-5 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} />
+              <h3 className="font-bold">Service Breakdown</h3>
             </div>
+            {serviceBreakdown.length > 0 ? (
+              <div className="space-y-3" role="list" aria-label="Service breakdown">
+                {serviceBreakdown.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3" role="listitem">
+                    <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                    <span className="flex-1 text-sm">{item.service}</span>
+                    <span className="font-bold text-sm">{item.count}</span>
+                    <div 
+                      className={`w-16 sm:w-20 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}
+                      role="progressbar"
+                      aria-valuenow={item.percentage}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-label={`${item.service} percentage`}
+                    >
+                      <div 
+                        className={`h-2 rounded-full ${item.color} transition-all duration-500`}
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
+                    <span className={`text-sm w-10 text-right ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {item.percentage}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                No service data available
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Second Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Top Performing Days */}
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
-          <CardContent className="p-4">
-            <h3 className="font-bold mb-4">📅 Busiest Days</h3>
-            <div className="space-y-3">
-              {topDays.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    idx === 0 ? 'bg-yellow-400 text-slate-950' :
-                    idx === 1 ? 'bg-slate-300 text-slate-950' :
-                    idx === 2 ? 'bg-amber-600 text-white' :
-                    theme === 'dark' ? 'bg-white/10' : 'bg-slate-200'
-                  }`}>
-                    {idx + 1}
-                  </span>
-                  <span className="flex-1">{item.day}</span>
-                  <span className="font-bold">{item.jobs} jobs</span>
-                  <div className={`w-24 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                    <div 
-                      className="h-2 rounded-full bg-cyan-400"
-                      style={{ width: `${(item.jobs / 28) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+              <h3 className="font-bold">Busiest Days</h3>
             </div>
+            {topDays.length > 0 ? (
+              <div className="space-y-3" role="list" aria-label="Busiest days ranking">
+                {topDays.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3" role="listitem">
+                    <span 
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        idx === 0 ? 'bg-yellow-400 text-slate-950' :
+                        idx === 1 ? 'bg-slate-300 text-slate-950' :
+                        idx === 2 ? 'bg-amber-600 text-white' :
+                        theme === 'dark' ? 'bg-white/10' : 'bg-slate-200'
+                      }`}
+                      aria-label={`Rank ${idx + 1}`}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1 text-sm">{item.day}</span>
+                    <span className="font-bold text-sm">{item.jobs} jobs</span>
+                    <div 
+                      className={`w-20 sm:w-24 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}
+                      role="progressbar"
+                      aria-valuenow={(item.jobs / 28) * 100}
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      aria-label={`${item.day} job count`}
+                    >
+                      <div 
+                        className="h-2 rounded-full bg-cyan-400 transition-all duration-500"
+                        style={{ width: `${(item.jobs / 28) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                No job data available for busy day analysis
+              </p>
+            )}
           </CardContent>
         </Card>
 
-        {/* Performance Metrics */}
         <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
-          <CardContent className="p-4">
-            <h3 className="font-bold mb-4">⚡ Performance Metrics</h3>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+              <h3 className="font-bold">Performance Metrics</h3>
+            </div>
             <div className="space-y-4">
-              <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
-                <div className="flex justify-between items-center">
-                  <span>Avg Jobs per Day</span>
-                  <span className="font-bold text-2xl">{avgJobsPerDay}</span>
+              <div className={`p-3 sm:p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm">Avg Jobs per Day</span>
+                  <span className="font-bold text-lg">{avgJobsPerDay}</span>
                 </div>
-                <div className={`mt-2 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                <div 
+                  className={`h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}
+                  role="progressbar"
+                  aria-valuenow={75}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
                   <div className="h-2 w-3/4 rounded-full bg-cyan-400" />
                 </div>
               </div>
-              <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
-                <div className="flex justify-between items-center">
-                  <span>Avg Revenue per Job</span>
-                  <span className="font-bold text-2xl">${avgRevenuePerJob}</span>
+              <div className={`p-3 sm:p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm">Avg Revenue per Job</span>
+                  <span className="font-bold text-lg">${avgRevenuePerJob}</span>
                 </div>
-                <div className={`mt-2 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                <div 
+                  className={`h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}
+                  role="progressbar"
+                  aria-valuenow={66}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
                   <div className="h-2 w-2/3 rounded-full bg-green-400" />
                 </div>
               </div>
-              <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
-                <div className="flex justify-between items-center">
-                  <span>Customer Satisfaction</span>
-                  <span className="font-bold text-2xl">98%</span>
+              <div className={`p-3 sm:p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm">Customer Satisfaction</span>
+                  <span className="font-bold text-lg">98%</span>
                 </div>
-                <div className={`mt-2 h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                <div 
+                  className={`h-2 rounded-full ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}
+                  role="progressbar"
+                  aria-valuenow={98}
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
                   <div className="h-2 w-[98%] rounded-full bg-yellow-400" />
                 </div>
               </div>
@@ -325,34 +602,81 @@ const Reports = ({ theme = 'dark' }) => {
         </Card>
       </div>
 
-      {/* Export Section */}
-      <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
-        <CardContent className="p-4">
-          <h3 className="font-bold mb-4">📥 Export Reports</h3>
-          <div className="grid md:grid-cols-3 gap-4">
+      <Card 
+        id="export-section"
+        tabIndex={0}
+        className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl focus:ring-2 focus:ring-cyan-400/50 outline-none`}
+      >
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Download className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+              <h3 className="font-bold">Export Reports</h3>
+            </div>
+            <span className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-xs">E</kbd> to export
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <button 
-              onClick={() => alert('Exporting leads report as CSV...')}
-              className={`p-4 rounded-xl border transition ${theme === 'dark' ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-50'}`}
+              onClick={() => handleExport('leads')}
+              className={`group p-4 rounded-xl border transition-all duration-200 ${
+                theme === 'dark' 
+                  ? 'border-white/10 hover:bg-white/5 hover:border-cyan-400/30' 
+                  : 'border-slate-200 hover:bg-slate-50 hover:border-cyan-400/50'
+              } focus:ring-2 focus:ring-cyan-400/50 focus:outline-none`}
+              aria-label="Export leads report as CSV"
             >
-              <span className="text-2xl mb-2 block">📊</span>
-              <p className="font-semibold">Leads Report</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Download as CSV</p>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-colors ${
+                theme === 'dark' ? 'bg-cyan-400/20 group-hover:bg-cyan-400/30' : 'bg-cyan-100 group-hover:bg-cyan-200'
+              }`}>
+                <Users className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
+              </div>
+              <p className="font-semibold text-left">Leads Report</p>
+              <p className={`text-sm text-left flex items-center gap-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                <FileText className="w-3 h-3" />
+                Download as CSV
+              </p>
             </button>
             <button 
-              onClick={() => alert('Exporting jobs report as CSV...')}
-              className={`p-4 rounded-xl border transition ${theme === 'dark' ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-50'}`}
+              onClick={() => handleExport('jobs')}
+              className={`group p-4 rounded-xl border transition-all duration-200 ${
+                theme === 'dark' 
+                  ? 'border-white/10 hover:bg-white/5 hover:border-purple-400/30' 
+                  : 'border-slate-200 hover:bg-slate-50 hover:border-purple-400/50'
+              } focus:ring-2 focus:ring-purple-400/50 focus:outline-none`}
+              aria-label="Export jobs report as CSV"
             >
-              <span className="text-2xl mb-2 block">📅</span>
-              <p className="font-semibold">Jobs Report</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Download as CSV</p>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-colors ${
+                theme === 'dark' ? 'bg-purple-400/20 group-hover:bg-purple-400/30' : 'bg-purple-100 group-hover:bg-purple-200'
+              }`}>
+                <Briefcase className={`w-5 h-5 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} />
+              </div>
+              <p className="font-semibold text-left">Jobs Report</p>
+              <p className={`text-sm text-left flex items-center gap-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                <FileText className="w-3 h-3" />
+                Download as CSV
+              </p>
             </button>
             <button 
-              onClick={() => alert('Generating revenue report PDF...')}
-              className={`p-4 rounded-xl border transition ${theme === 'dark' ? 'border-white/10 hover:bg-white/5' : 'border-slate-200 hover:bg-slate-50'}`}
+              onClick={() => handleExport('revenue')}
+              className={`group p-4 rounded-xl border transition-all duration-200 ${
+                theme === 'dark' 
+                  ? 'border-white/10 hover:bg-white/5 hover:border-yellow-400/30' 
+                  : 'border-slate-200 hover:bg-slate-50 hover:border-yellow-400/50'
+              } focus:ring-2 focus:ring-yellow-400/50 focus:outline-none`}
+              aria-label="Generate revenue report PDF"
             >
-              <span className="text-2xl mb-2 block">💰</span>
-              <p className="font-semibold">Revenue Report</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Download as PDF</p>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 transition-colors ${
+                theme === 'dark' ? 'bg-yellow-400/20 group-hover:bg-yellow-400/30' : 'bg-yellow-100 group-hover:bg-yellow-200'
+              }`}>
+                <DollarSign className={`w-5 h-5 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`} />
+              </div>
+              <p className="font-semibold text-left">Revenue Report</p>
+              <p className={`text-sm text-left flex items-center gap-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                <FileText className="w-3 h-3" />
+                Download as PDF
+              </p>
             </button>
           </div>
         </CardContent>
