@@ -36,6 +36,68 @@ if (!stripe) {
   console.log('⚠️  Stripe not configured - payment features will be disabled');
 }
 
+const QUO_API_KEY = process.env.QUO_API_KEY;
+const QUO_API_URL = 'https://api.openphone.com';
+const OPENPHONE_NUMBER = process.env.OPENPHONE_NUMBER;
+
+if (!QUO_API_KEY) {
+  console.log('⚠️  QUO API not configured - SMS features will be disabled');
+}
+
+function normalizePhoneNumber(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return `+${digits}`;
+  }
+  if (digits.length > 10) {
+    return `+${digits}`;
+  }
+  return null;
+}
+
+async function sendSMS(to, content) {
+  if (!QUO_API_KEY || !OPENPHONE_NUMBER) {
+    console.log('⚠️  SMS not sent - QUO API or OpenPhone number not configured');
+    return { success: false, error: 'SMS not configured' };
+  }
+
+  const normalizedPhone = normalizePhoneNumber(to);
+  if (!normalizedPhone) {
+    console.log(`⚠️  SMS not sent - invalid phone number: ${to}`);
+    return { success: false, error: 'Invalid phone number' };
+  }
+
+  try {
+    const response = await fetch(`${QUO_API_URL}/v1/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': QUO_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content,
+        from: OPENPHONE_NUMBER,
+        to: [normalizedPhone],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to send SMS');
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error('QUO SMS error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || '360cleaning_jwt_secret_2026';
@@ -152,15 +214,28 @@ app.get('/api/leads', authenticateToken, async (req, res) => {
 app.post('/api/leads', async (req, res) => {
   try {
     const { name, phone, email, service, notes, lead_source, business_type, address } = req.body;
-    
+
     const result = await query(
-      `INSERT INTO leads (name, phone, email, service, notes, lead_source, business_type, address) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      `INSERT INTO leads (name, phone, email, service, notes, lead_source, business_type, address)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [name, phone, email, service, notes, lead_source || 'Website', business_type, address]
     );
-    
-    res.status(201).json(result.rows[0]);
+
+    const newLead = result.rows[0];
+
+    await query(
+      `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+      ['lead_received', name, phone, email, `New lead received: ${name} - ${phone} - ${service}`, 'lead', newLead.id, 'sent']
+    );
+
+    if (phone) {
+      const intakeMsg = `Hi ${name}! Thanks for choosing 360 Cleaning Co.! We received your quote request and will contact you within 2 hours. Questions? Call (862) 285-4949`;
+      await sendSMS(phone, intakeMsg);
+    }
+
+    res.status(201).json(newLead);
   } catch (error) {
     console.error('Create lead error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -259,15 +334,28 @@ app.get('/api/jobs', authenticateToken, async (req, res) => {
 app.post('/api/jobs', authenticateToken, async (req, res) => {
   try {
     const { client, phone, email, service, date, status, notes, crew_id } = req.body;
-    
+
     const result = await query(
-      `INSERT INTO jobs (client, phone, email, service, date, status, notes, crew_id) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      `INSERT INTO jobs (client, phone, email, service, date, status, notes, crew_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [client, phone, email, service, date, status || 'Pending', notes, crew_id]
     );
-    
-    res.status(201).json(result.rows[0]);
+
+    const newJob = result.rows[0];
+
+    await query(
+      `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+      ['job_scheduled', client, phone, email, `Job scheduled: ${service} for ${date}`, 'job', newJob.id, 'sent']
+    );
+
+    if (phone) {
+      const jobMsg = `Hi ${client}! Your ${service} is scheduled for ${date}. Thank you for choosing 360 Cleaning Co.! Questions? Call (862) 285-4949`;
+      await sendSMS(phone, jobMsg);
+    }
+
+    res.status(201).json(newJob);
   } catch (error) {
     console.error('Create job error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -535,15 +623,28 @@ app.get('/api/recurring', authenticateToken, async (req, res) => {
 app.post('/api/recurring', authenticateToken, async (req, res) => {
   try {
     const { name, phone, email, plan, frequency, price, next_date, status } = req.body;
-    
+
     const result = await query(
-      `INSERT INTO recurring_clients (name, phone, email, plan, frequency, price, next_date, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      `INSERT INTO recurring_clients (name, phone, email, plan, frequency, price, next_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [name, phone, email, plan, frequency, price, next_date, status || 'active']
     );
-    
-    res.status(201).json(result.rows[0]);
+
+    const newClient = result.rows[0];
+
+    await query(
+      `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+      ['client_onboarded', name, phone, email, `New recurring client: ${name} - ${plan} plan`, 'recurring_client', newClient.id, 'sent']
+    );
+
+    if (phone) {
+      const welcomeMsg = `Hi ${name}! Welcome to 360 Cleaning Co.! Your ${plan} cleaning plan is active. Next scheduled clean: ${next_date}. Questions? Call (862) 285-4949`;
+      await sendSMS(phone, welcomeMsg);
+    }
+
+    res.status(201).json(newClient);
   } catch (error) {
     console.error('Create recurring client error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -1356,10 +1457,15 @@ async function processRecurringJobCreation() {
         UPDATE recurring_clients SET next_date = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2
       `, [nextDate.toISOString().split('T')[0], client.id]);
 
+      const notificationMsg = `Auto-scheduled: ${serviceName} for ${today}`;
       await query(`
         INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
-      `, ['job_created', client.name, client.phone, client.email, `Auto-scheduled: ${serviceName} for ${today}`, 'recurring_client', client.id, 'sent']);
+      `, ['job_created', client.name, client.phone, client.email, notificationMsg, 'recurring_client', client.id, 'sent']);
+
+      if (client.phone) {
+        await sendSMS(client.phone, notificationMsg);
+      }
 
       results.push({ client_id: client.id, client_name: client.name, job_created: true });
     } catch (err) {
@@ -1385,12 +1491,17 @@ async function processOverdueInvoices() {
         UPDATE invoices SET status = 'overdue', updated_at = CURRENT_TIMESTAMP WHERE id = $1
       `, [invoice.id]);
 
+      const notificationMsg = `Invoice #${invoice.id} is overdue. Amount: $${invoice.amount}. Please remit payment.`;
       await query(`
         INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
       `, ['invoice_overdue', invoice.client, invoice.phone, invoice.email,
-          `Invoice #${invoice.id} is overdue. Amount: $${invoice.amount}. Please remit payment.`,
+          notificationMsg,
           'invoice', invoice.id, 'sent']);
+
+      if (invoice.phone) {
+        await sendSMS(invoice.phone, notificationMsg);
+      }
 
       results.push({ invoice_id: invoice.id, marked_overdue: true });
     } catch (err) {
@@ -1412,11 +1523,12 @@ async function processStaleLeads(thresholdHours = 72) {
 
   for (const lead of staleLeads.rows) {
     try {
+      const notificationMsg = `Stale lead alert: ${lead.name} (${lead.phone}) - No activity for ${thresholdHours}+ hours. Status: ${lead.status}`;
       await query(`
         INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
       `, ['stale_lead', lead.name, lead.phone, lead.email,
-          `Stale lead alert: ${lead.name} (${lead.phone}) - No activity for ${thresholdHours}+ hours. Status: ${lead.status}`,
+          notificationMsg,
           'lead', lead.id, 'sent']);
 
       results.push({ lead_id: lead.id, lead_name: lead.name, alerted: true });
@@ -1459,6 +1571,13 @@ async function processLeadFollowup() {
           INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, related_entity_type, related_entity_id, delivery_status, sent_at)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
         `, ['lead_followup', lead.name, lead.phone, lead.email, message, 'lead', lead.id, 'sent']);
+
+        if (lead.phone) {
+          const smsResult = await sendSMS(lead.phone, message);
+          if (!smsResult.success) {
+            console.log(`SMS failed for ${lead.name}: ${smsResult.error}`);
+          }
+        }
 
         results.push({ lead_id: lead.id, lead_name: lead.name, sequence: seq.name, sent: true });
       } catch (err) {
@@ -2051,11 +2170,22 @@ app.get('/api/notification-templates', authenticateToken, async (req, res) => {
 
 app.post('/api/notifications/send-bulk', authenticateToken, async (req, res) => {
   try {
-    const { template_id, recipient_type, recipient_ids } = req.body;
+    const { template_id, recipient_type, recipient_ids, custom_message } = req.body;
+
+    const templates = {
+      lead_received: 'New lead received: {{name}} - {{phone}} - {{service}}',
+      job_scheduled: 'Your cleaning is scheduled for {{date}}. Crew: {{crew}}',
+      job_completed: 'Your cleaning has been completed. Thank you for choosing 360 Cleaning Co.!',
+      invoice_sent: 'Invoice #{{invoice_id}} for ${{amount}} is due on {{due_date}}.',
+      payment_received: 'Thank you! We received your payment of ${{amount}}.',
+      reminder: 'Reminder: Your cleaning service is scheduled for {{date}}.'
+    };
+
+    const templateMessage = custom_message || templates[template_id] || 'Message from 360 Cleaning Co.';
 
     let recipients = [];
     if (recipient_type === 'leads') {
-      const result = await query('SELECT name, phone, email FROM leads WHERE id = ANY($1)', [recipient_ids]);
+      const result = await query('SELECT name, phone, email, service FROM leads WHERE id = ANY($1)', [recipient_ids]);
       recipients = result.rows;
     } else if (recipient_type === 'clients') {
       const result = await query('SELECT name, phone, email FROM recurring_clients WHERE id = ANY($1)', [recipient_ids]);
@@ -2063,16 +2193,38 @@ app.post('/api/notifications/send-bulk', authenticateToken, async (req, res) => 
     }
 
     const sent = [];
+    const failed = [];
     for (const r of recipients) {
+      const message = templateMessage
+        .replace(/{{name}}/g, r.name)
+        .replace(/{{phone}}/g, r.phone)
+        .replace(/{{service}}/g, r.service || '')
+        .replace(/{{email}}/g, r.email || '')
+        .replace(/{{date}}/g, r.date || '')
+        .replace(/{{crew}}/g, r.crew || '')
+        .replace(/{{invoice_id}}/g, r.invoice_id || r.id || '')
+        .replace(/{{amount}}/g, r.amount || '')
+        .replace(/{{due_date}}/g, r.due_date || '');
+
       await query(
         `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, delivery_status, sent_at)
          VALUES ($1, $2, $3, $4, $5, 'sent', CURRENT_TIMESTAMP)`,
-        [template_id, r.name, r.phone, r.email, `Bulk notification using template ${template_id}`]
+        [template_id, r.name, r.phone, r.email, message]
       );
-      sent.push(r.name);
+
+      if (r.phone) {
+        const smsResult = await sendSMS(r.phone, message);
+        if (smsResult.success) {
+          sent.push(r.name);
+        } else {
+          failed.push({ name: r.name, error: smsResult.error });
+        }
+      } else {
+        sent.push(r.name);
+      }
     }
 
-    res.json({ success: true, sent_count: sent.length, recipients: sent });
+    res.json({ success: true, sent_count: sent.length, sms_sent: sent.length, recipients: sent, failed });
   } catch (error) {
     console.error('Send bulk notifications error:', error);
     res.status(500).json({ error: 'Server error' });
