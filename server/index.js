@@ -213,13 +213,29 @@ app.get('/api/leads', authenticateToken, async (req, res) => {
 
 app.post('/api/leads', async (req, res) => {
   try {
-    const { name, phone, email, service, notes, lead_source, business_type, address } = req.body;
+    const { name, phone, email, service, notes, lead_source, business_type, address,
+            property_size, bathrooms, frequency, county, city_area, add_ons,
+            estimated_low, estimated_high } = req.body;
+
+    // Map service name to service_type for SMS sequences
+    const serviceTypeMap = {
+      'Residential Cleaning': 'residential',
+      'Commercial Cleaning': 'commercial',
+      'Deep Cleaning': 'deep',
+      'Move In/Out': 'move',
+      'Post-Construction': 'construction'
+    };
+    const serviceType = serviceTypeMap[service] || 'residential';
 
     const result = await query(
-      `INSERT INTO leads (name, phone, email, service, notes, lead_source, business_type, address)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO leads (name, phone, email, service, notes, lead_source, business_type, address,
+                          property_size, bathrooms, frequency, county, city_area, add_ons,
+                          estimated_low, estimated_high, lead_sub_source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
-      [name, phone, email, service, notes, lead_source || 'Website', business_type, address]
+      [name, phone, email, service, notes, lead_source || 'Website', business_type, address,
+       property_size, bathrooms, frequency, county, city_area, add_ons ? JSON.stringify(add_ons) : null,
+       estimated_low, estimated_high, 'quote_form']
     );
 
     const newLead = result.rows[0];
@@ -230,8 +246,23 @@ app.post('/api/leads', async (req, res) => {
       ['lead_received', name, phone, email, `New lead received: ${name} - ${phone} - ${service}`, 'lead', newLead.id, 'sent']
     );
 
+    // Initialize SMS sequence state for this lead
+    await query(
+      `INSERT INTO lead_sms_sequence_state (lead_id, service_type, trigger_status, last_sequence_step, last_sent_at, completed)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [newLead.id, serviceType, 'New', 0, new Date().toISOString(), false]
+    );
+
+    // Send service-specific welcome SMS
     if (phone) {
-      const intakeMsg = `Hi ${name}! Thanks for choosing 360 Cleaning Co.! We received your quote request and will contact you within 2 hours. Questions? Call (862) 285-4949`;
+      const welcomeMessages = {
+        residential: `Hi ${name}! 🏠 Thanks for requesting a quote from 360 Cleaning! We will send your personalized price within 2 hours. Questions? Text back or call (862) 285-4949`,
+        commercial: `Hi ${name}! 🏢 Thanks for your commercial cleaning inquiry. We service offices, restaurants, retail & more across NJ. Your quote ready in 2 hours!`,
+        deep: `Hi ${name}! ✨ Thanks for your deep cleaning interest! We go above & beyond - scrubbed grout, clean cabinets, detailed baseboards. Price coming in 2 hours!`,
+        move: `Hi ${name}! 🚚 Thanks for your move in/out cleaning request! We make spaces move-in ready & help protect your security deposit. Price in 2 hours!`,
+        construction: `Hi ${name}! 🏗️ Thanks for your post-construction cleanup request! We handle debris removal, dust & detailed finishing. Price coming in 2 hours!`
+      };
+      const intakeMsg = welcomeMessages[serviceType] || `Hi ${name}! Thanks for choosing 360 Cleaning Co.! We received your quote request and will contact you within 2 hours. Questions? Call (862) 285-4949`;
       await sendSMS(phone, intakeMsg);
     }
 
