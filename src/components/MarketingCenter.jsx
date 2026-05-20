@@ -10,13 +10,9 @@ const MarketingCenter = ({ theme = 'dark' }) => {
   const [smsTemplate, setSmsTemplate] = useState('');
   const [selectedRecipients, setSelectedRecipients] = useState('all');
   const [showPreview, setShowPreview] = useState(false);
-  const [twilioConfig, setTwilioConfig] = useState({
-    accountSid: '',
-    authToken: '',
-    phoneNumber: ''
-  });
   const [smsHistory, setSmsHistory] = useState([]);
   const [emailHistory, setEmailHistory] = useState([]);
+  const [sendingSms, setSendingSms] = useState(false);
 
   // Email templates
   const emailTemplates = [
@@ -125,28 +121,61 @@ Your 360 Cleaning Team 🏠`
     }]);
   };
 
-  const sendBulkSms = () => {
-    // In production, this would integrate with Twilio
-    const { accountSid, authToken, phoneNumber } = twilioConfig;
-    
-    if (!accountSid || !authToken || !phoneNumber) {
-      alert('Please configure Twilio settings first!');
+  const sendBulkSms = async () => {
+    const recipientIds = selectedRecipients === 'all'
+      ? leads.filter(l => l.status !== 'Converted').map(l => l.id)
+      : leads.filter(l => l.status === selectedRecipients).map(l => l.id);
+
+    const recipientCount = recipientIds.length;
+
+    if (recipientCount === 0) {
+      alert('No recipients selected!');
       return;
     }
 
-    const recipientCount = selectedRecipients === 'all' 
-      ? leads.filter(l => l.status !== 'Converted').length 
-      : leads.filter(l => l.status === selectedRecipients).length;
-    
-    alert(`SMS campaign sent to ${recipientCount} recipients via Twilio!\n\nAccount SID: ${accountSid}\nFrom: ${phoneNumber}\n\n(In production, this would use Twilio API)`);
-    
-    setSmsHistory([...smsHistory, {
-      id: Date.now(),
-      type: 'sms',
-      recipients: recipientCount,
-      template: 'Custom Template',
-      sentAt: new Date().toLocaleString()
-    }]);
+    if (!smsTemplate.trim()) {
+      alert('Please write an SMS message first!');
+      return;
+    }
+
+    setSendingSms(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/notifications/send-bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          template_id: 'marketing_sms',
+          recipient_type: 'leads',
+          recipient_ids: recipientIds,
+          custom_message: smsTemplate
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send SMS');
+      }
+
+      const result = await response.json();
+      alert(`SMS campaign sent to ${result.sms_sent || result.sent_count} recipients via QUO!\n\nCheck your phone for messages.`);
+
+      setSmsHistory([...smsHistory, {
+        id: Date.now(),
+        type: 'sms',
+        recipients: result.sms_sent || result.sent_count,
+        template: 'Custom Template',
+        sentAt: new Date().toLocaleString()
+      }]);
+    } catch (error) {
+      console.error('SMS send error:', error);
+      alert('Failed to send SMS. Please try again.');
+    } finally {
+      setSendingSms(false);
+    }
   };
 
   const exportToCsv = () => {
@@ -369,17 +398,18 @@ Your 360 Cleaning Team 🏠`
                   </p>
                 </div>
 
-                <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-yellow-400/10 border border-yellow-400/20' : 'bg-yellow-50 border border-yellow-200'}`}>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-700'}`}>
-                    ⚠️ Configure Twilio settings in the API tab before sending
+                <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-green-400/10 border border-green-400/20' : 'bg-green-50 border border-green-200'}`}>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-700'}`}>
+                    ✓ QUO SMS is configured and ready
                   </p>
                 </div>
 
-                <Button 
+                <Button
                   onClick={sendBulkSms}
-                  className="w-full bg-green-400 text-slate-950 hover:bg-green-300 rounded-xl py-3"
+                  disabled={sendingSms}
+                  className="w-full bg-green-400 text-slate-950 hover:bg-green-300 rounded-xl py-3 disabled:opacity-50"
                 >
-                  📱 Send SMS Campaign via Twilio
+                  {sendingSms ? '⏳ Sending...' : '📱 Send SMS Campaign via QUO'}
                 </Button>
               </div>
             </CardContent>
@@ -497,61 +527,25 @@ Your 360 Cleaning Team 🏠`
       {/* API Settings Tab */}
       {activeTab === 'settings' && (
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Twilio */}
+          {/* QUO SMS */}
           <Card className={`${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'} rounded-2xl`}>
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-12 w-12 rounded-xl bg-red-400/20 flex items-center justify-center text-2xl">📱</div>
+                <div className="h-12 w-12 rounded-xl bg-green-400/20 flex items-center justify-center text-2xl">📱</div>
                 <div>
-                  <h3 className="font-bold">Twilio SMS API</h3>
+                  <h3 className="font-bold">QUO SMS API</h3>
                   <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>SMS Marketing Integration</p>
                 </div>
               </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className={`text-sm font-medium mb-2 block ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Account SID
-                  </label>
-                  <input
-                    type="text"
-                    value={twilioConfig.accountSid}
-                    onChange={(e) => setTwilioConfig({...twilioConfig, accountSid: e.target.value})}
-                    placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-slate-100 border-slate-200'} border outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`text-sm font-medium mb-2 block ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Auth Token
-                  </label>
-                  <input
-                    type="password"
-                    value={twilioConfig.authToken}
-                    onChange={(e) => setTwilioConfig({...twilioConfig, authToken: e.target.value})}
-                    placeholder="Your Twilio Auth Token"
-                    className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-slate-100 border-slate-200'} border outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`text-sm font-medium mb-2 block ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Twilio Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={twilioConfig.phoneNumber}
-                    onChange={(e) => setTwilioConfig({...twilioConfig, phoneNumber: e.target.value})}
-                    placeholder="+1234567890"
-                    className={`w-full px-4 py-2 rounded-xl ${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-slate-100 border-slate-200'} border outline-none`}
-                  />
-                </div>
-                <Button 
-                  onClick={() => alert('Settings saved!\n\nIn production, this would securely store your API keys.')}
-                  className="w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-xl"
-                >
-                  💾 Save Twilio Settings
-                </Button>
+
+              <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-green-400/10 border border-green-400/20' : 'bg-green-50 border border-green-200'}`}>
+                <p className={`text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-700'}`}>
+                  ✓ QUO SMS is configured on the server. No client-side setup needed.
+                </p>
               </div>
+              <p className={`text-sm mt-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                QUO API key and OpenPhone number are configured in the backend environment variables on Render.
+              </p>
             </CardContent>
           </Card>
 
