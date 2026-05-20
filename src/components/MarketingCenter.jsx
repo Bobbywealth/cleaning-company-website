@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
+import { getToken } from '@/services/api';
 
 const MarketingCenter = ({ theme = 'dark' }) => {
   const { leads, jobs } = useApp();
@@ -141,7 +142,7 @@ Your 360 Cleaning Team 🏠`
     setSendingSms(true);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/notifications/send-bulk`, {
         method: 'POST',
         headers: {
