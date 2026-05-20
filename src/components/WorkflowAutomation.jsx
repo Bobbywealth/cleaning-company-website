@@ -24,7 +24,8 @@ import {
   Calendar,
   Users,
   CreditCard,
-  Send
+  Send,
+  MapPin
 } from 'lucide-react';
 
 const WORKFLOW_TYPES = [
@@ -57,10 +58,15 @@ const WorkflowAutomation = ({ theme = 'dark' }) => {
   });
 
   const fetchData = async () => {
-    const token = localStorage.getItem('360cleaning_auth');
-    const headers = { 'Authorization': `Bearer ${JSON.parse(token).token}` };
-
     try {
+      const token = localStorage.getItem('360cleaning_auth');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      const tokenData = JSON.parse(token);
+      const headers = { 'Authorization': `Bearer ${tokenData.token}` };
+
       const [wfRes, smsRes, zonesRes, notifRes, auditRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/workflows`, { headers }),
         fetch(`${import.meta.env.VITE_API_URL}/api/sms-sequences`, { headers }),
@@ -69,11 +75,11 @@ const WorkflowAutomation = ({ theme = 'dark' }) => {
         fetch(`${import.meta.env.VITE_API_URL}/api/audit-log?limit=20`, { headers })
       ]);
 
-      setWorkflows(await wfRes.json());
-      setSmsSequences(await smsRes.json());
-      setCrewZones(await zonesRes.json());
-      setNotifications(await notifRes.json());
-      setAuditLog(await auditRes.json());
+      if (wfRes.ok) setWorkflows(await wfRes.json());
+      if (smsRes.ok) setSmsSequences(await smsRes.json());
+      if (zonesRes.ok) setCrewZones(await zonesRes.json());
+      if (notifRes.ok) setNotifications(await notifRes.json());
+      if (auditRes.ok) setAuditLog(await auditRes.json());
     } catch (error) {
       console.error('Failed to fetch automation data:', error);
     } finally {
