@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy, memo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton, SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton';
@@ -204,6 +204,7 @@ const Sidebar = memo(({
   setIsMobileOpen
 }) => {
   const sidebarRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -254,8 +255,9 @@ const Sidebar = memo(({
       <nav className="flex-1 overflow-y-auto py-4 px-2" role="tablist" aria-label="Dashboard sections">
         <div className="space-y-1">
           {tabs.map((tab, index) => (
-            <button
+            <Link
               key={tab.id}
+              to={`/admin/dashboard${tab.id === 'overview' ? '' : `?tab=${tab.id}`}`}
               onClick={() => {
                 setActiveTab(tab.id);
                 if (isMobile) setIsMobileOpen(false);
@@ -263,7 +265,7 @@ const Sidebar = memo(({
               role="tab"
               aria-selected={activeTab === tab.id}
               aria-label={`${tab.label}${tab.badge ? `, ${tab.badge} notifications` : ''}`}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative no-underline ${
                 activeTab === tab.id
                   ? 'bg-cyan-400 text-slate-950 font-semibold'
                   : theme === 'dark'
@@ -300,8 +302,7 @@ const Sidebar = memo(({
                   {tab.label}
                 </span>
               )}
-              
-            </button>
+            </Link>
           ))}
         </div>
       </nav>
