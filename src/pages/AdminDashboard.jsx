@@ -745,19 +745,7 @@ const AdminDashboard = memo(() => {
                       <Menu className="w-5 h-5" />
                     </button>
                   )}
-                  <div className="flex items-center gap-2 md:gap-3">
-                    {!isMobile && (
-                      <img
-                        src="https://iili.io/Btud5oF.th.png"
-                        alt="Cleaning Company Logo"
-                        className="h-10 w-10 md:h-12 md:w-12 rounded-xl object-cover border border-white/10"
-                      />
-                    )}
-                    <div>
-                      <p className="font-bold text-base md:text-lg leading-none">Admin Dashboard</p>
-                      <p className="text-xs text-cyan-400 hidden sm:block">360 Cleaning Co.</p>
-                    </div>
-                  </div>
+                  
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-4">
