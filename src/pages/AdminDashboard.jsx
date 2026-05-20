@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton, SkeletonCard, SkeletonTable } from '@/components/ui/Skeleton';
@@ -543,8 +543,10 @@ const QuickActionsMenu = memo(({ isOpen, onClose, onAction, theme }) => {
 
 const AdminDashboard = memo(() => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, stats, logout, leads, jobs, theme, toggleTheme } = useApp();
-  const [activeTab, setActiveTab] = useState('overview');
+  const urlTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(urlTab || 'overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -572,6 +574,22 @@ const AdminDashboard = memo(() => {
     }, 30000);
     return () => clearInterval(interval);
   }, [autoRefresh]);
+
+  useEffect(() => {
+    if (urlTab !== activeTab) {
+      if (activeTab === 'overview') {
+        setSearchParams({});
+      } else {
+        setSearchParams({ tab: activeTab });
+      }
+    }
+  }, [activeTab, urlTab, setSearchParams]);
+
+  useEffect(() => {
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
 
   const handleLogout = useCallback(() => {
     logout();
