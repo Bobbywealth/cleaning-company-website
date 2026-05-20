@@ -210,6 +210,100 @@ export const initializeDatabase = async () => {
     `);
     console.log('✓ Audit log table ready');
 
+    // Create inventory table for supplies management
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS inventory (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100),
+        unit VARCHAR(50),
+        quantity DECIMAL(10, 2) DEFAULT 0,
+        min_quantity DECIMAL(10, 2) DEFAULT 0,
+        cost_per_unit DECIMAL(10, 2) DEFAULT 0,
+        supplier VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Inventory table ready');
+
+    // Create commissions table for payroll tracking
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS commissions (
+        id SERIAL PRIMARY KEY,
+        crew_id INTEGER REFERENCES crew_members(id),
+        job_id INTEGER,
+        amount DECIMAL(10, 2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        pay_period VARCHAR(50),
+        paid_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Commissions table ready');
+
+    // Create integrations table for external service connections
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS integrations (
+        id SERIAL PRIMARY KEY,
+        service_name VARCHAR(100) NOT NULL,
+        access_token TEXT,
+        refresh_token TEXT,
+        expires_at TIMESTAMP,
+        settings JSONB,
+        is_active BOOLEAN DEFAULT false,
+        last_sync_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Integrations table ready');
+
+    // Create customer_portal_users table for self-service portal
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS customer_portal_users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255),
+        customer_name VARCHAR(255),
+        phone VARCHAR(50),
+        is_verified BOOLEAN DEFAULT false,
+        verification_token VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Customer portal users table ready');
+
+    // Create inbound_sms table for two-way SMS
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS inbound_sms (
+        id SERIAL PRIMARY KEY,
+        from_number VARCHAR(50) NOT NULL,
+        to_number VARCHAR(50),
+        message TEXT NOT NULL,
+        keyword VARCHAR(50),
+        processed BOOLEAN DEFAULT false,
+        response_sent TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Inbound SMS table ready');
+
+    // Create chatbot_conversations table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chatbot_conversations (
+        id SERIAL PRIMARY KEY,
+        session_id VARCHAR(100),
+        from_number VARCHAR(50),
+        email VARCHAR(255),
+        messages JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Chatbot conversations table ready');
+
     // Insert default SMS sequences for lead nurturing
     const smsSeqExists = await pool.query("SELECT id FROM sms_sequences LIMIT 1");
     if (smsSeqExists.rows.length === 0) {

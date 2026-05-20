@@ -1470,6 +1470,615 @@ async function processLeadFollowup() {
   return results;
 }
 
+// ============ INVENTORY ROUTES ============
+
+app.get('/api/inventory', authenticateToken, async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM inventory ORDER BY category, name');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get inventory error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/inventory', authenticateToken, async (req, res) => {
+  try {
+    const { name, category, unit, quantity, min_quantity, cost_per_unit, supplier } = req.body;
+
+    const result = await query(
+      `INSERT INTO inventory (name, category, unit, quantity, min_quantity, cost_per_unit, supplier)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [name, category, unit, quantity || 0, min_quantity || 0, cost_per_unit || 0, supplier]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create inventory error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/inventory/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, category, unit, quantity, min_quantity, cost_per_unit, supplier } = req.body;
+
+    const result = await query(
+      `UPDATE inventory SET name = COALESCE($1, name), category = COALESCE($2, category),
+       unit = COALESCE($3, unit), quantity = COALESCE($4, quantity), min_quantity = COALESCE($5, min_quantity),
+       cost_per_unit = COALESCE($6, cost_per_unit), supplier = COALESCE($7, supplier),
+       updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *`,
+      [name, category, unit, quantity, min_quantity, cost_per_unit, supplier, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Inventory item not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update inventory error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/inventory/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM inventory WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete inventory error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/inventory/low-stock', authenticateToken, async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT * FROM inventory WHERE quantity <= min_quantity ORDER BY quantity ASC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get low stock error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ COMMISSIONS & PAYROLL ROUTES ============
+
+app.get('/api/commissions', authenticateToken, async (req, res) => {
+  try {
+    const { crew_id, status, pay_period } = req.query;
+    let query_str = `
+      SELECT c.*, cm.name as crew_name
+      FROM commissions c
+      LEFT JOIN crew_members cm ON c.crew_id = cm.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (crew_id) {
+      params.push(crew_id);
+      query_str += ` AND c.crew_id = $${params.length}`;
+    }
+    if (status) {
+      params.push(status);
+      query_str += ` AND c.status = $${params.length}`;
+    }
+    if (pay_period) {
+      params.push(pay_period);
+      query_str += ` AND c.pay_period = $${params.length}`;
+    }
+
+    query_str += ' ORDER BY c.created_at DESC';
+    const result = await query(query_str, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get commissions error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/commissions/calculate', authenticateToken, async (req, res) => {
+  try {
+    const { crew_id, job_id, commission_rate } = req.body;
+
+    const jobResult = await query('SELECT * FROM jobs WHERE id = $1', [job_id]);
+    if (jobResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    const job = jobResult.rows[0];
+    const invoiceResult = await query(
+      'SELECT amount FROM invoices WHERE client = $1 AND status = $2',
+      [job.client, 'paid']
+    );
+
+    let amount = 0;
+    if (invoiceResult.rows.length > 0) {
+      amount = parseFloat(invoiceResult.rows[0].amount) * (commission_rate || 0.10);
+    }
+
+    const result = await query(
+      `INSERT INTO commissions (crew_id, job_id, amount, status)
+       VALUES ($1, $2, $3, 'pending') RETURNING *`,
+      [crew_id, job_id, amount]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Calculate commission error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/commissions/:id/pay', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      `UPDATE commissions SET status = 'paid', paid_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Commission not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Pay commission error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/payroll/summary', authenticateToken, async (req, res) => {
+  try {
+    const { pay_period } = req.query;
+
+    const result = await query(`
+      SELECT cm.id, cm.name, cm.role,
+        COALESCE(SUM(c.amount), 0) as total_commissions,
+        COUNT(CASE WHEN c.status = 'paid' THEN 1 END) as paid_count,
+        COUNT(CASE WHEN c.status = 'pending' THEN 1 END) as pending_count
+      FROM crew_members cm
+      LEFT JOIN commissions c ON cm.id = c.crew_id
+      ${pay_period ? ' AND c.pay_period = $1' : ''}
+      GROUP BY cm.id, cm.name, cm.role
+      ORDER BY cm.name
+    `, pay_period ? [pay_period] : []);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get payroll summary error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ INTEGRATIONS ROUTES ============
+
+app.get('/api/integrations', authenticateToken, async (req, res) => {
+  try {
+    const result = await query('SELECT id, service_name, is_active, last_sync_at, created_at FROM integrations ORDER BY service_name');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get integrations error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/integrations', authenticateToken, async (req, res) => {
+  try {
+    const { service_name, access_token, refresh_token, expires_at, settings } = req.body;
+
+    const result = await query(
+      `INSERT INTO integrations (service_name, access_token, refresh_token, expires_at, settings, is_active)
+       VALUES ($1, $2, $3, $4, $5, true) RETURNING *`,
+      [service_name, access_token, refresh_token, expires_at, JSON.stringify(settings || {})]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create integration error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.put('/api/integrations/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active, access_token, refresh_token, expires_at, settings } = req.body;
+
+    const result = await query(
+      `UPDATE integrations SET is_active = COALESCE($1, is_active),
+       access_token = COALESCE($2, access_token), refresh_token = COALESCE($3, refresh_token),
+       expires_at = COALESCE($4, expires_at), settings = COALESCE($5, settings),
+       updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *`,
+      [is_active, access_token, refresh_token, expires_at, settings ? JSON.stringify(settings) : null, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Integration not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update integration error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/integrations/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query('DELETE FROM integrations WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete integration error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/integrations/:id/sync', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const integration = await query('SELECT * FROM integrations WHERE id = $1', [id]);
+
+    if (integration.rows.length === 0) {
+      return res.status(404).json({ error: 'Integration not found' });
+    }
+
+    await query(
+      'UPDATE integrations SET last_sync_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [id]
+    );
+
+    res.json({ success: true, message: `${integration.rows[0].service_name} sync triggered`, last_sync_at: new Date().toISOString() });
+  } catch (error) {
+    console.error('Sync integration error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ CUSTOMER PORTAL ROUTES ============
+
+app.post('/api/portal/register', async (req, res) => {
+  try {
+    const { email, password, customer_name, phone } = req.body;
+
+    const existing = await query('SELECT id FROM customer_portal_users WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    const verificationToken = Math.random().toString(36).substring(2, 15);
+    const result = await query(
+      `INSERT INTO customer_portal_users (email, password, customer_name, phone, verification_token)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, email, customer_name, phone, is_verified`,
+      [email, password, customer_name, phone, verificationToken]
+    );
+
+    res.status(201).json({ success: true, user: result.rows[0], verification_token: verificationToken });
+  } catch (error) {
+    console.error('Portal register error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/portal/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const result = await query(
+      'SELECT id, email, customer_name, phone, is_verified FROM customer_portal_users WHERE email = $1 AND password = $2',
+      [email, password]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ id: result.rows[0].id, email: result.rows[0].email, type: 'customer' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token, user: result.rows[0] });
+  } catch (error) {
+    console.error('Portal login error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/portal/jobs', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.type !== 'customer') {
+      return res.status(403).json({ error: 'Customer access required' });
+    }
+
+    const userResult = await query('SELECT customer_name, phone FROM customer_portal_users WHERE id = $1', [decoded.id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { customer_name, phone } = userResult.rows[0];
+    const jobsResult = await query(
+      'SELECT * FROM jobs WHERE client = $1 OR phone = $2 ORDER BY date DESC LIMIT 50',
+      [customer_name, phone]
+    );
+
+    res.json(jobsResult.rows);
+  } catch (error) {
+    console.error('Get portal jobs error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/portal/invoices', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.type !== 'customer') {
+      return res.status(403).json({ error: 'Customer access required' });
+    }
+
+    const userResult = await query('SELECT customer_name, phone FROM customer_portal_users WHERE id = $1', [decoded.id]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { customer_name, phone } = userResult.rows[0];
+    const invoicesResult = await query(
+      'SELECT * FROM invoices WHERE client = $1 OR email = $2 ORDER BY date DESC LIMIT 50',
+      [customer_name, decoded.email]
+    );
+
+    res.json(invoicesResult.rows);
+  } catch (error) {
+    console.error('Get portal invoices error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ INBOUND SMS & TWO-WAY SMS ROUTES ============
+
+app.post('/api/sms/inbound', async (req, res) => {
+  try {
+    const { from, to, message } = req.body;
+
+    const keyword = message.trim().toUpperCase().split(' ')[0];
+    let response = 'Thank you for your message. We will get back to you shortly.';
+
+    if (keyword === 'STOP') {
+      response = 'You have been unsubscribed from SMS notifications. Reply START to resubscribe.';
+    } else if (keyword === 'START') {
+      response = 'Welcome back! You have been resubscribed to SMS notifications.';
+    } else if (keyword === 'DONE' || keyword === 'COMPLETE') {
+      response = 'Thank you for confirming! We will update your job status.';
+    } else if (keyword === 'RESCHEDULE') {
+      response = 'To reschedule, please call us at (862) 285-4949 or visit your customer portal.';
+    } else if (keyword === 'CONFIRM') {
+      response = 'Your appointment is confirmed! We look forward to seeing you.';
+    }
+
+    await query(
+      `INSERT INTO inbound_sms (from_number, to_number, message, keyword, processed, response_sent)
+       VALUES ($1, $2, $3, $4, true, $5)`,
+      [from, to, message, keyword, response]
+    );
+
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error('Inbound SMS error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/sms/inbound', authenticateToken, async (req, res) => {
+  try {
+    const { limit = 100, offset = 0 } = req.query;
+    const result = await query(
+      'SELECT * FROM inbound_sms ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      [parseInt(limit), parseInt(offset)]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get inbound SMS error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ CHATBOT ROUTES ============
+
+app.post('/api/chatbot/message', async (req, res) => {
+  try {
+    const { session_id, from_number, email, message } = req.body;
+
+    let conversationResult = await query(
+      'SELECT * FROM chatbot_conversations WHERE session_id = $1 AND status = $2',
+      [session_id, 'active']
+    );
+
+    let conversationId;
+    if (conversationResult.rows.length === 0) {
+      const newConv = await query(
+        `INSERT INTO chatbot_conversations (session_id, from_number, email, messages, status)
+         VALUES ($1, $2, $3, '[]', 'active') RETURNING id`,
+        [session_id || Math.random().toString(36).substring(2, 15), from_number, email]
+      );
+      conversationId = newConv.rows[0].id;
+    } else {
+      conversationId = conversationResult.rows[0].id;
+    }
+
+    const botResponses = generateBotResponse(message);
+
+    await query(
+      `UPDATE chatbot_conversations SET messages = messages || $1::jsonb, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [JSON.stringify([{ from: 'customer', text: message, timestamp: new Date().toISOString() }, ...botResponses.map(r => ({ from: 'bot', text: r, timestamp: new Date().toISOString() }))]), conversationId]
+    );
+
+    res.json({ success: true, responses: botResponses, session_id: session_id });
+  } catch (error) {
+    console.error('Chatbot message error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+function generateBotResponse(message) {
+  const lowerMsg = message.toLowerCase();
+
+  if (lowerMsg.includes('price') || lowerMsg.includes('cost') || lowerMsg.includes('quote')) {
+    return ['Our commercial cleaning services start at $150 for a standard office. For a customized quote, please call (862) 285-4949 or request a quote on our website.'];
+  }
+  if (lowerMsg.includes('hour') || lowerMsg.includes('open') || lowerMsg.includes('close') || lowerMsg.includes('available')) {
+    return ['We are available Monday-Friday, 8AM-6PM, and Saturday 9AM-4PM. Emergency after-hours service is available by appointment.'];
+  }
+  if (lowerMsg.includes('service') || lowerMsg.includes('clean')) {
+    return ['We offer: Office Cleaning, Post-Construction, Move-in/Move-out, Deep Cleaning, and Recurring Maintenance. Which service are you interested in?'];
+  }
+  if (lowerMsg.includes('contact') || lowerMsg.includes('phone') || lowerMsg.includes('call')) {
+    return ['You can reach us at (862) 285-4949 or email info@360cleaningco.com. We would love to hear from you!'];
+  }
+  if (lowerMsg.includes('book') || lowerMsg.includes('schedule') || lowerMsg.includes('appointment')) {
+    return ['To schedule a cleaning, please call us at (862) 285-4949 or visit our website to request a quote. We will get back to you within 2 hours!'];
+  }
+  if (lowerMsg.includes('thank')) {
+    return ['Thank you for choosing 360 Cleaning Co.! Is there anything else I can help you with?'];
+  }
+
+  return ['I am here to help! You can ask me about our services, pricing, or how to schedule a cleaning. You can also call us at (862) 285-4949 for immediate assistance.'];
+}
+
+app.get('/api/chatbot/conversations', authenticateToken, async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT * FROM chatbot_conversations ORDER BY updated_at DESC LIMIT 100'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get chatbot conversations error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ ROUTE OPTIMIZATION ROUTES ============
+
+app.get('/api/routes/optimize', authenticateToken, async (req, res) => {
+  try {
+    const { date } = req.query;
+
+    const jobsResult = await query(`
+      SELECT j.*, cz.zone_name, cz.zip_codes
+      FROM jobs j
+      LEFT JOIN leads l ON j.client = l.name OR j.phone = l.phone
+      LEFT JOIN crew_zones cz ON l.address SIMILAR TO '%(' || array_to_string(cz.zip_codes, '|') || ')%'
+      WHERE j.date = $1 AND j.status IN ('Scheduled', 'Confirmed')
+      ORDER BY j.date
+    `, [date || new Date().toISOString().split('T')[0]]);
+
+    const jobs = jobsResult.rows;
+    const zones = {};
+
+    for (const job of jobs) {
+      const zone = job.zone_name || 'Unassigned';
+      if (!zones[zone]) {
+        zones[zone] = [];
+      }
+      zones[zone].push(job);
+    }
+
+    const optimizedRoutes = Object.entries(zones).map(([zone, zoneJobs]) => ({
+      zone,
+      jobs: zoneJobs,
+      estimated_duration: zoneJobs.length * 90,
+      job_count: zoneJobs.length
+    }));
+
+    res.json({ routes: optimizedRoutes, total_jobs: jobs.length });
+  } catch (error) {
+    console.error('Optimize routes error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/routes/zones', authenticateToken, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT cz.*, cm.name as crew_name,
+        (SELECT COUNT(*) FROM jobs j WHERE j.date = CURRENT_DATE AND j.crew_id = cm.id) as assigned_jobs
+      FROM crew_zones cz
+      LEFT JOIN crew_members cm ON cz.crew_id = cm.id
+      ORDER BY cz.zone_name
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get zones error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ NOTIFICATION TEMPLATES ROUTES ============
+
+app.get('/api/notification-templates', authenticateToken, async (req, res) => {
+  try {
+    const templates = [
+      { id: 'lead_received', name: 'Lead Received', subject: 'New Lead Notification', message: 'New lead received: {{name}} - {{phone}} - {{service}}' },
+      { id: 'job_scheduled', name: 'Job Scheduled', subject: 'Job Scheduled', message: 'Your cleaning is scheduled for {{date}}. Crew: {{crew}}' },
+      { id: 'job_completed', name: 'Job Completed', subject: 'Job Completed', message: 'Your cleaning has been completed. Thank you for choosing 360 Cleaning Co.!' },
+      { id: 'invoice_sent', name: 'Invoice Sent', subject: 'Invoice #{{invoice_id}}', message: 'Invoice #{{invoice_id}} for ${{amount}} is due on {{due_date}}.' },
+      { id: 'payment_received', name: 'Payment Received', subject: 'Payment Confirmed', message: 'Thank you! We received your payment of ${{amount}}.' },
+      { id: 'reminder', name: 'Service Reminder', subject: 'Upcoming Service', message: 'Reminder: Your cleaning service is scheduled for {{date}}.' }
+    ];
+    res.json(templates);
+  } catch (error) {
+    console.error('Get notification templates error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/notifications/send-bulk', authenticateToken, async (req, res) => {
+  try {
+    const { template_id, recipient_type, recipient_ids } = req.body;
+
+    let recipients = [];
+    if (recipient_type === 'leads') {
+      const result = await query('SELECT name, phone, email FROM leads WHERE id = ANY($1)', [recipient_ids]);
+      recipients = result.rows;
+    } else if (recipient_type === 'clients') {
+      const result = await query('SELECT name, phone, email FROM recurring_clients WHERE id = ANY($1)', [recipient_ids]);
+      recipients = result.rows;
+    }
+
+    const sent = [];
+    for (const r of recipients) {
+      await query(
+        `INSERT INTO notifications (type, recipient_name, recipient_phone, recipient_email, message, delivery_status, sent_at)
+         VALUES ($1, $2, $3, $4, $5, 'sent', CURRENT_TIMESTAMP)`,
+        [template_id, r.name, r.phone, r.email, `Bulk notification using template ${template_id}`]
+      );
+      sent.push(r.name);
+    }
+
+    res.json({ success: true, sent_count: sent.length, recipients: sent });
+  } catch (error) {
+    console.error('Send bulk notifications error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

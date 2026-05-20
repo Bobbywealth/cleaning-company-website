@@ -39,7 +39,12 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
-  Zap
+  Zap,
+  Package,
+  DollarSign,
+  Link,
+  MapPin,
+  MessageSquare
 } from 'lucide-react';
 
 const LeadsList = lazy(() => import('@/components/LeadsList'));
@@ -52,6 +57,12 @@ const RecurringClients = lazy(() => import('@/components/RecurringClients'));
 const Reports = lazy(() => import('@/components/Reports'));
 const EnhancedReports = lazy(() => import('@/components/EnhancedReports'));
 const WorkflowAutomation = lazy(() => import('@/components/WorkflowAutomation'));
+const InventoryManagement = lazy(() => import('@/components/InventoryManagement'));
+const PayrollCommission = lazy(() => import('@/components/PayrollCommission'));
+const IntegrationsManager = lazy(() => import('@/components/IntegrationsManager'));
+const RouteOptimizer = lazy(() => import('@/components/RouteOptimizer'));
+const TwoWaySMS = lazy(() => import('@/components/TwoWaySMS'));
+const CustomerPortal = lazy(() => import('@/components/CustomerPortal'));
 
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(() => {
@@ -591,6 +602,12 @@ const AdminDashboard = memo(() => {
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
     { id: 'automation', label: 'Automation', icon: Zap },
     { id: 'customers', label: 'Customers', icon: Star },
+    { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'payroll', label: 'Payroll', icon: DollarSign },
+    { id: 'integrations', label: 'Integrations', icon: Link },
+    { id: 'routes', label: 'Routes', icon: MapPin },
+    { id: 'sms', label: 'SMS', icon: MessageSquare },
+    { id: 'portal', label: 'Portal', icon: Home },
   ], [stats.newLeads, jobs.length]);
 
   const globalSearchResults = useMemo(() => {
@@ -1222,6 +1239,42 @@ const AdminDashboard = memo(() => {
                       )}
                     </CardContent>
                   </Card>
+                </div>
+              )}
+
+              {activeTab === 'inventory' && (
+                <div id="panel-inventory" role="tabpanel" aria-labelledby="tab-inventory">
+                  <InventoryManagement isDarkMode={theme === 'dark'} />
+                </div>
+              )}
+
+              {activeTab === 'payroll' && (
+                <div id="panel-payroll" role="tabpanel" aria-labelledby="tab-payroll">
+                  <PayrollCommission isDarkMode={theme === 'dark'} />
+                </div>
+              )}
+
+              {activeTab === 'integrations' && (
+                <div id="panel-integrations" role="tabpanel" aria-labelledby="tab-integrations">
+                  <IntegrationsManager isDarkMode={theme === 'dark'} />
+                </div>
+              )}
+
+              {activeTab === 'routes' && (
+                <div id="panel-routes" role="tabpanel" aria-labelledby="tab-routes">
+                  <RouteOptimizer isDarkMode={theme === 'dark'} />
+                </div>
+              )}
+
+              {activeTab === 'sms' && (
+                <div id="panel-sms" role="tabpanel" aria-labelledby="tab-sms">
+                  <TwoWaySMS isDarkMode={theme === 'dark'} />
+                </div>
+              )}
+
+              {activeTab === 'portal' && (
+                <div id="panel-portal" role="tabpanel" aria-labelledby="tab-portal">
+                  <CustomerPortal isDarkMode={theme === 'dark'} />
                 </div>
               )}
 
