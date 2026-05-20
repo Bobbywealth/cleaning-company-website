@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SkeletonTable } from '@/components/ui/Skeleton';
+import EmptyState from '@/components/ui/EmptyState';
 import { useApp } from '@/context/AppContext';
+import { getInvoiceStatusColor } from '@/utils/dashboard';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   CreditCard,
@@ -30,22 +32,6 @@ import {
   AlertTriangle,
   Inbox
 } from 'lucide-react';
-
-const EmptyState = ({ icon: Icon = Inbox, title, description, action, onAction }) => (
-  <div className="flex flex-col items-center justify-center py-16 px-4">
-    <div className={`p-4 rounded-full bg-slate-100 dark:bg-slate-800 mb-4`}>
-      <Icon className="h-12 w-12 text-slate-400" />
-    </div>
-    <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">{title}</h3>
-    <p className="text-slate-500 dark:text-slate-400 text-center mb-6 max-w-md">{description}</p>
-    {action && onAction && (
-      <Button onClick={onAction} className="bg-cyan-400 text-slate-950 hover:bg-cyan-300 rounded-xl">
-        <Plus className="h-4 w-4 mr-2" />
-        {action}
-      </Button>
-    )}
-  </div>
-);
 
 const STATUS_OPTIONS = ['pending', 'paid', 'overdue'];
 
@@ -126,7 +112,6 @@ const Invoices = ({ theme = 'dark' }) => {
           setStripePromise(loadStripe(data.publishableKey));
         }
       } catch (err) {
-        console.log('Stripe not configured');
       }
     };
     loadStripeConfig();
@@ -190,7 +175,6 @@ const Invoices = ({ theme = 'dark' }) => {
         setFormErrors({});
       }
     } catch (error) {
-      console.error('Error creating invoice:', error);
     }
   };
 
@@ -248,7 +232,6 @@ const Invoices = ({ theme = 'dark' }) => {
         setShowPaymentModal(false);
       }
     } catch (error) {
-      console.error('Payment error:', error);
     }
 
     setPaymentLoading(false);

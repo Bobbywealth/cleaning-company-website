@@ -6,11 +6,12 @@ import EmptyState from '@/components/ui/EmptyState';
 import { useApp } from '@/context/AppContext';
 import { getToken } from '@/services/api';
 import {
-  X, Search, ChevronLeft, ChevronRight, Plus, Download, Upload,
+  X, Search, ChevronLeft, ChevronRight, Plus, Upload,
   Edit, Trash2, Phone, Mail, Filter, ArrowUpDown, ChevronDown,
   User, Building2, Home, MapPin, FileText, Check, AlertCircle,
   ArrowUp, ArrowDown, Users
 } from 'lucide-react';
+import { getLeadStatusColor, getLeadSourceColor, formatDate } from '@/utils/dashboard';
 
 const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
   const { leads, markLeadContacted, markLeadConverted, removeLead, addLead, updateLeadData } = useApp();
@@ -104,38 +105,6 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }));
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'New': return 'bg-cyan-400/20 text-cyan-400';
-      case 'Contacted': return 'bg-yellow-400/20 text-yellow-400';
-      case 'Converted': return 'bg-green-400/20 text-green-400';
-      default: return 'bg-slate-400/20 text-slate-400';
-    }
-  };
-
-  const getSourceColor = (source) => {
-    switch (source) {
-      case 'Website': return 'bg-blue-400/20 text-blue-400';
-      case 'Cold Call': return 'bg-orange-400/20 text-orange-400';
-      case 'Referral': return 'bg-purple-400/20 text-purple-400';
-      case 'Google': return 'bg-red-400/20 text-red-400';
-      case 'Facebook': return 'bg-indigo-400/20 text-indigo-400';
-      case 'Yelp': return 'bg-green-400/20 text-green-400';
-      default: return 'bg-slate-400/20 text-slate-400';
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
   };
 
   const toggleSelectLead = (leadId, index, event) => {
@@ -241,7 +210,6 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
         setFormStep(1);
       }
     } catch (error) {
-      console.error('Error adding lead:', error);
     } finally {
       setIsLoading(false);
     }
@@ -292,7 +260,6 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
           setShowImportModal(false);
         }
       } catch (error) {
-        console.error('CSV import error:', error);
       }
     };
     reader.readAsText(file);
@@ -752,12 +719,12 @@ const LeadsList = ({ searchQuery = '', onCustomerClick, theme = 'dark' }) => {
                             >
                               {lead.name || 'Unknown'}
                             </h3>
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getSourceColor(lead.lead_source || 'Website')}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getLeadSourceColor(lead.lead_source || 'Website')}`}>
                               {lead.lead_source || 'Website'}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap mt-1">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(lead.status)}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${getLeadStatusColor(lead.status)}`}>
                               {lead.status}
                             </span>
                             {lead.business_type && (

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { SkeletonCard } from '@/components/ui/skeleton';
 import { useApp } from '@/context/AppContext';
+import { getJobStatusColor } from '@/utils/dashboard';
 import { 
   GripVertical, Calendar, Plus, X, ChevronLeft, ChevronRight, 
   Clock, MapPin, User, Phone, Mail, Trash2, Edit, Check, Filter
@@ -19,7 +21,6 @@ const JobsManager = ({ theme = 'dark' }) => {
     phone: '',
     email: ''
   });
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedDayJobs, setSelectedDayJobs] = useState(null);
   const [expandedJob, setExpandedJob] = useState(null);
@@ -44,16 +45,12 @@ const JobsManager = ({ theme = 'dark' }) => {
     allJobIds.current = filteredJobs.map(j => j.id);
   }, [jobs, filters]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Confirmed': return 'bg-green-400/20 text-green-400';
-      case 'Scheduled': return 'bg-blue-400/20 text-blue-400';
-      case 'Pending': return 'bg-yellow-400/20 text-yellow-400';
-      case 'Completed': return 'bg-purple-400/20 text-purple-400';
-      case 'Cancelled': return 'bg-red-400/20 text-red-400';
-      default: return 'bg-slate-400/20 text-slate-400';
-    }
-  };
+  const filteredJobs = jobs.filter(job => {
+    if (filters.status && job.status !== filters.status) return false;
+    if (filters.dateFrom && new Date(job.date) < new Date(filters.dateFrom)) return false;
+    if (filters.dateTo && new Date(job.date) > new Date(filters.dateTo)) return false;
+    return true;
+  });
 
   const getStatusDotColor = (status) => {
     switch (status) {
@@ -65,13 +62,6 @@ const JobsManager = ({ theme = 'dark' }) => {
       default: return 'bg-slate-400';
     }
   };
-
-  const filteredJobs = jobs.filter(job => {
-    if (filters.status && job.status !== filters.status) return false;
-    if (filters.dateFrom && new Date(job.date) < new Date(filters.dateFrom)) return false;
-    if (filters.dateTo && new Date(job.date) > new Date(filters.dateTo)) return false;
-    return true;
-  });
 
   const jobsByStatus = {
     Pending: filteredJobs.filter(j => j.status === 'Pending'),
@@ -202,14 +192,6 @@ const JobsManager = ({ theme = 'dark' }) => {
 
   const days = getDaysInMonth(calendarDate);
   const monthYear = calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  const SkeletonCard = () => (
-    <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-white/5' : 'bg-white/80'} animate-pulse`}>
-      <div className={`h-4 w-24 rounded mb-2 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-      <div className={`h-3 w-32 rounded mb-2 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-      <div className={`h-3 w-20 rounded ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-    </div>
-  );
 
   const JobCard = ({ job, columnStatus }) => {
     const isExpanded = expandedJob === job.id;
@@ -477,63 +459,61 @@ const JobsManager = ({ theme = 'dark' }) => {
       )}
 
       {viewMode === 'list' && (
-        <>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { status: 'Pending', jobs: jobsByStatus.Pending, color: 'from-yellow-400/20 to-yellow-600/20', borderColor: 'border-yellow-400/30' },
-              { status: 'Confirmed', jobs: jobsByStatus.Confirmed, color: 'from-green-400/20 to-green-600/20', borderColor: 'border-green-400/30' },
-              { status: 'Scheduled', jobs: jobsByStatus.Scheduled, color: 'from-blue-400/20 to-blue-600/20', borderColor: 'border-blue-400/30' },
-              { status: 'Completed', jobs: jobsByStatus.Completed, color: 'from-purple-400/20 to-purple-600/20', borderColor: 'border-purple-400/30' },
-            ].map(column => (
-              <div 
-                key={column.status} 
-                className={`
-                  rounded-2xl bg-gradient-to-br ${column.color} p-4 border-2 transition-all duration-200
-                  ${dragOverColumn === column.status ? `${column.borderColor} ring-2 ring-cyan-400/50` : 'border-transparent'}
-                  ${theme === 'dark' ? '' : ''}
-                `}
-                onDragOver={(e) => handleDragOver(e, column.status)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, column.status)}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold flex items-center gap-2">
-                    {column.status}
-                    <span className={`w-2 h-2 rounded-full ${getStatusDotColor(column.status)}`}></span>
-                  </h4>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${theme === 'dark' ? 'bg-white/10' : 'bg-white/50'}`}>
-                    {loading ? '-' : column.jobs.length}
-                  </span>
-                </div>
-                <div className="space-y-2 min-h-[100px]">
-                  {loading ? (
-                    <>
-                      <SkeletonCard />
-                      <SkeletonCard />
-                    </>
-                  ) : column.jobs.length === 0 ? (
-                    <p className={`text-sm text-center py-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                      No jobs
-                    </p>
-                  ) : (
-                    column.jobs.map(job => <JobCard key={job.id} job={job} columnStatus={column.status} />)
-                  )}
-                  {quickAddColumn === column.status ? (
-                    <QuickAdd status={column.status} />
-                  ) : (
-                    <button
-                      onClick={() => setQuickAddColumn(column.status)}
-                      className={`w-full p-2 rounded-xl border-2 border-dashed text-xs flex items-center justify-center gap-1 transition ${theme === 'dark' ? 'border-white/20 hover:border-white/40 text-slate-400 hover:text-slate-300' : 'border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-600'}`}
-                    >
-                      <Plus size={14} />
-                      Quick Add
-                    </button>
-                  )}
-                </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { status: 'Pending', jobs: jobsByStatus.Pending, color: 'from-yellow-400/20 to-yellow-600/20', borderColor: 'border-yellow-400/30' },
+            { status: 'Confirmed', jobs: jobsByStatus.Confirmed, color: 'from-green-400/20 to-green-600/20', borderColor: 'border-green-400/30' },
+            { status: 'Scheduled', jobs: jobsByStatus.Scheduled, color: 'from-blue-400/20 to-blue-600/20', borderColor: 'border-blue-400/30' },
+            { status: 'Completed', jobs: jobsByStatus.Completed, color: 'from-purple-400/20 to-purple-600/20', borderColor: 'border-purple-400/30' },
+          ].map(column => (
+            <div 
+              key={column.status} 
+              className={`
+                rounded-2xl bg-gradient-to-br ${column.color} p-4 border-2 transition-all duration-200
+                ${dragOverColumn === column.status ? `${column.borderColor} ring-2 ring-cyan-400/50` : 'border-transparent'}
+                ${theme === 'dark' ? '' : ''}
+              `}
+              onDragOver={(e) => handleDragOver(e, column.status)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, column.status)}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold flex items-center gap-2">
+                  {column.status}
+                  <span className={`w-2 h-2 rounded-full ${getStatusDotColor(column.status)}`}></span>
+                </h4>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${theme === 'dark' ? 'bg-white/10' : 'bg-white/50'}`}>
+                  {loading ? '-' : column.jobs.length}
+                </span>
               </div>
-            ))}
-          </div>
-        </>
+              <div className="space-y-2 min-h-[100px]">
+                {loading ? (
+                  <>
+                    <SkeletonCard />
+                    <SkeletonCard />
+                  </>
+                ) : column.jobs.length === 0 ? (
+                  <p className={`text-sm text-center py-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                    No jobs
+                  </p>
+                ) : (
+                  column.jobs.map(job => <JobCard key={job.id} job={job} columnStatus={column.status} />)
+                )}
+                {quickAddColumn === column.status ? (
+                  <QuickAdd status={column.status} />
+                ) : (
+                  <button
+                    onClick={() => setQuickAddColumn(column.status)}
+                    className={`w-full p-2 rounded-xl border-2 border-dashed text-xs flex items-center justify-center gap-1 transition ${theme === 'dark' ? 'border-white/20 hover:border-white/40 text-slate-400 hover:text-slate-300' : 'border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-600'}`}
+                  >
+                    <Plus size={14} />
+                    Quick Add
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {viewMode === 'calendar' && (
@@ -632,7 +612,7 @@ const JobsManager = ({ theme = 'dark' }) => {
                           <p className="font-semibold text-sm">{job.client}</p>
                           <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{job.service}</p>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(job.status)}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs ${getJobStatusColor(job.status)}`}>
                           {job.status}
                         </span>
                       </div>

@@ -29,8 +29,6 @@ import {
   TrendingDown,
   Minus,
   Keyboard,
-  HelpCircle,
-  Globe,
   Filter,
   Home,
   ArrowUpRight,
@@ -556,21 +554,15 @@ const AdminDashboard = memo(() => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
-  const [fabKey, setFabKey] = useState(0);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
-  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
 
   const searchInputRef = useRef(null);
   const notificationsRef = useRef(null);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('dashboardTheme');
-    if (!savedTheme) {
-      localStorage.setItem('dashboardTheme', prefersDark ? 'dark' : 'light');
-    }
-  }, [prefersDark]);
+    localStorage.getItem('dashboardTheme');
+  }, []);
 
   useEffect(() => {
     if (!autoRefresh) return;
@@ -713,7 +705,6 @@ const AdminDashboard = memo(() => {
 
   const fabActions = useCallback((action) => {
     setActiveTab(action);
-    setFabKey(prev => prev + 1);
   }, []);
 
   return (

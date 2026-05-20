@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { useApp } from '@/context/AppContext';
+import { getCrewStatusColor } from '@/utils/dashboard';
 import {
   HardHat,
   Users,
@@ -27,6 +28,30 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+const ToggleSwitch = memo(({ id, currentStatus, onToggle }) => (
+  <button
+    onClick={(e) => { e.stopPropagation(); onToggle(); }}
+    className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+      currentStatus === 'available' ? 'bg-emerald-500' : currentStatus === 'busy' ? 'bg-amber-500' : 'bg-slate-600'
+    }`}
+  >
+    <span
+      className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+        currentStatus === 'available' ? 'left-7' : currentStatus === 'busy' ? 'left-4' : 'left-1'
+      }`}
+    />
+  </button>
+));
+
+const getStatusIcon = (status) => {
+  switch (status) {
+    case 'available': return <CheckCircle className="w-3.5 h-3.5" />;
+    case 'busy': return <Clock className="w-3.5 h-3.5" />;
+    case 'off': return <XCircle className="w-3.5 h-3.5" />;
+    default: return <XCircle className="w-3.5 h-3.5" />;
+  }
+};
+
 const CrewManagement = ({ theme = 'dark' }) => {
   const { crewMembers, addCrewMember, updateCrewMember, removeCrewMember } = useApp();
   const [selectedCrew, setSelectedCrew] = useState(null);
@@ -44,24 +69,6 @@ const CrewManagement = ({ theme = 'dark' }) => {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'available': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'busy': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'off': return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
-      default: return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'available': return <CheckCircle className="w-3.5 h-3.5" />;
-      case 'busy': return <Clock className="w-3.5 h-3.5" />;
-      case 'off': return <XCircle className="w-3.5 h-3.5" />;
-      default: return <XCircle className="w-3.5 h-3.5" />;
-    }
-  };
 
   const validateForm = (data) => {
     const errors = {};
@@ -117,21 +124,6 @@ const CrewManagement = ({ theme = 'dark' }) => {
 
   const availableCrew = crewMembers.filter(m => m.status === 'available').length;
   const busyCrew = crewMembers.filter(m => m.status === 'busy').length;
-
-  const toggleSwitch = (id, currentStatus) => (
-    <button
-      onClick={(e) => { e.stopPropagation(); toggleStatus(id, currentStatus); }}
-      className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-        currentStatus === 'available' ? 'bg-emerald-500' : currentStatus === 'busy' ? 'bg-amber-500' : 'bg-slate-600'
-      }`}
-    >
-      <span
-        className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-          currentStatus === 'available' ? 'left-7' : currentStatus === 'busy' ? 'left-4' : 'left-1'
-        }`}
-      />
-    </button>
-  );
 
   return (
     <div className="space-y-6">
@@ -281,7 +273,7 @@ const CrewManagement = ({ theme = 'dark' }) => {
                   </div>
 
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(member.status)}`}>
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getCrewStatusColor(member.status)}`}>
                       {getStatusIcon(member.status)}
                       <span className="hidden sm:inline">{member.status.charAt(0).toUpperCase() + member.status.slice(1)}</span>
                       <span className="sm:hidden">{member.status.charAt(0).toUpperCase()}</span>
@@ -331,7 +323,7 @@ const CrewManagement = ({ theme = 'dark' }) => {
                     </button>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>Status</span>
-                      {toggleSwitch(member.id, member.status)}
+                      <ToggleSwitch id={member.id} currentStatus={member.status} onToggle={() => toggleStatus(member.id, member.status)} />
                     </div>
                   </div>
                 </CardContent>
@@ -487,7 +479,7 @@ const CrewManagement = ({ theme = 'dark' }) => {
                         {getStatusIcon(selectedCrew.status)}
                         <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Status</p>
                       </div>
-                      {toggleSwitch(selectedCrew.id, selectedCrew.status)}
+                      <ToggleSwitch id={selectedCrew.id} currentStatus={selectedCrew.status} onToggle={() => toggleStatus(selectedCrew.id, selectedCrew.status)} />
                     </div>
                   </div>
                 </div>
