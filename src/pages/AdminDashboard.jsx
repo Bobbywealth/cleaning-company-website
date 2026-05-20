@@ -1301,7 +1301,7 @@ const AdminDashboard = memo(() => {
 
         <FloatingActionButton onClick={() => setShowFabMenu(!showFabMenu)} theme={theme} />
         <QuickActionsMenu
-          key={fabKey}
+          key={showFabMenu}
           isOpen={showFabMenu}
           onClose={() => setShowFabMenu(false)}
           onAction={fabActions}
