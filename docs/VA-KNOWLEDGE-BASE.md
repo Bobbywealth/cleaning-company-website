@@ -12,8 +12,10 @@
 6. [Crew Management](#6-crew-management)
 7. [Invoicing & Payments](#7-invoicing--payments)
 8. [Pricing Reference](#8-pricing-reference)
-9. [Reports & Analytics](#9-reports--analytics)
-10. [Troubleshooting](#10-troubleshooting)
+9. [Marketing Center](#9-marketing-center)
+10. [Recurring Clients](#10-recurring-clients)
+11. [Reports & Analytics](#11-reports--analytics)
+12. [Troubleshooting](#12-troubleshooting)
 
 ---
 
@@ -417,7 +419,160 @@ Price Range = Final Price × 0.90 to Final Price × 1.15
 
 ---
 
-## 9. Reports & Analytics
+## 9. Marketing Center
+
+### Email Marketing
+Access via: Dashboard → Marketing tab → Email Marketing
+
+#### Pre-built Email Templates
+| Template | Use Case |
+|---------|----------|
+| Welcome | New leads after submission |
+| Follow-up | Leads who haven't responded |
+| Reminder | Remind leads of pending quotes |
+| Review | Request review after job completion |
+
+#### Email Variables
+Use these placeholders in templates for personalization:
+- `{{name}}` - Customer's first name
+- `{{company}}` - Company name (360 Cleaning Co.)
+
+#### Sending Bulk Emails
+1. Go to Marketing tab
+2. Select "Email Marketing"
+3. Choose or create template
+4. Select recipients (All, New, Contacted, Converted)
+5. Click "Send Campaign"
+
+#### API Configuration
+Configure email service in Marketing → API Settings:
+- SendGrid or Mailgun supported
+- Requires API Key
+- Requires Verified Sender Email
+
+### SMS Marketing
+Access via: Dashboard → Marketing tab → SMS Marketing
+
+#### Pre-built SMS Templates
+| Template | Use Case |
+|---------|----------|
+| Welcome | Initial welcome message |
+| Follow-up | Check on pending quotes |
+| Reminder | Day before appointment |
+| Review | Request review after service |
+| Promo | Promotional campaigns |
+
+#### SMS Character Limit
+- Maximum 160 characters per message
+- Counter shows remaining characters
+- Messages over 160 characters may be split
+
+#### Broadcast Messaging
+- Send single message to all recipients
+- Compose custom message or use template
+- Select recipient group (All, New, Contacted, Converted)
+- Click "Send SMS" to broadcast
+
+#### Twilio Configuration
+Configure in Marketing → API Settings tab:
+| Setting | Description |
+|---------|-------------|
+| Account SID | Twilio Account Identifier |
+| Auth Token | Twilio Authentication Token |
+| Phone Number | Twilio phone number (with country code, e.g. +1...) |
+
+Save settings with "Save Twilio Settings" button. Test connection before sending campaigns.
+
+### Marketing Analytics
+Access via: Dashboard → Marketing tab → Analytics
+
+#### Available Metrics
+- Total Leads
+- Converted Customers
+- Total Jobs
+- Conversion Rate Percentage
+
+#### Visualizations
+- Lead Status Breakdown (New/Contacted/Converted)
+- Job Status Breakdown (Pending/Confirmed/Scheduled/Completed)
+
+### Automation Features
+Marketing automation is manual trigger from the UI:
+- Email/SMS campaigns require VA to initiate sending
+- No automatic scheduled sends configured
+- Broadcast messages sent immediately on click
+
+---
+
+## 10. Recurring Clients
+
+### Overview
+Recurring clients are subscription customers with scheduled, repeat cleaning services.
+
+### Access
+Dashboard → Customers tab
+
+### Plan Types
+| Plan | Description | Typical Price |
+|------|------------|---------------|
+| Basic | Entry-level recurring service | $150-200/mo |
+| Standard | Mid-tier recurring maintenance | $250-300/mo |
+| Premium | Full-service weekly recurring | $500-700/mo |
+
+### Frequency Options
+| Frequency | Interval | Jobs per Month |
+|-----------|----------|----------------|
+| Weekly | Every week | 4 |
+| Bi-weekly | Every 2 weeks | 2 |
+| Monthly | Every month | 1 |
+
+### Automation Features
+Recurring client automation is manual trigger from the UI:
+- No automatic scheduled job creation configured
+- VA must click "Schedule" button to create next job
+- System does not auto-generate recurring jobs
+- Pausing/resuming is manual action
+
+### Adding Recurring Clients
+1. Go to Customers tab
+2. Click "Add Recurring Client"
+3. Fill in:
+   - Client Name
+   - Phone
+   - Email
+   - Plan (Basic/Standard/Premium)
+   - Frequency (Weekly/Bi-weekly/Monthly)
+   - Price ($)
+
+### Managing Recurring Clients
+
+#### Pause/Resume
+- Click "Pause" to suspend service
+- Click "Resume" to reactivate
+- Paused clients don't count toward monthly revenue
+
+#### Schedule Job
+- Click "Schedule" button
+- Creates job using client's next scheduled date
+- Job marked as recurring
+
+#### Edit Client
+- Click edit icon to modify details
+- Update plan, frequency, price, contact info
+
+#### Delete Client
+- Click delete icon to remove
+- Confirm deletion in popup
+
+### Monthly Revenue Calculation
+System calculates based on active clients:
+- Weekly: price × 4
+- Bi-weekly: price × 2
+- Monthly: price × 1
+
+---
+
+## 11. Reports & Analytics
 
 ### Dashboard Stats (Overview Tab)
 | Metric | Description |
@@ -470,7 +625,7 @@ Price Range = Final Price × 0.90 to Final Price × 1.15
 
 ---
 
-## 10. Troubleshooting
+## 12. Troubleshooting
 
 ### Login Issues
 **Problem**: Cannot log in with correct credentials
@@ -489,6 +644,14 @@ Price Range = Final Price × 0.90 to Final Price × 1.15
 ### Email Not Sending
 **Problem**: Invoice emails not arriving
 **Solution**: Check SMTP configuration. System logs emails when SMTP not configured.
+
+### SMS Not Sending
+**Problem**: SMS campaign shows error
+**Solution**: Configure Twilio settings in Marketing → API Settings tab. Requires Account SID, Auth Token, and Phone Number.
+
+### Marketing Campaign Not Working
+**Problem**: Send button doesn't process
+**Solution**: Verify API credentials are saved in Settings tab. Bulk email requires SendGrid/Mailgun. Bulk SMS requires Twilio.
 
 ### Data Not Saving
 **Problem**: Changes not persisting

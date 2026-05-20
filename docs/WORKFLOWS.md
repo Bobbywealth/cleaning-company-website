@@ -300,10 +300,125 @@ If a customer reports an issue with a completed job.
 
 ---
 
-## 9. Recurring Client Management
+## 9. Email Marketing Campaign
 
-### Overview
-Manage subscription/recurring cleaning clients.
+### Prerequisites
+Email service (SendGrid/Mailgun) must be configured in Marketing → API Settings tab.
+
+### Step-by-Step Procedure
+
+**Step 1: Access Marketing Center**
+1. Click "Marketing" tab
+2. Ensure "Email Marketing" is selected
+
+**Step 2: Select Template**
+1. Browse available templates:
+   - Welcome: New lead submission
+   - Follow-up: No response after 2-3 days
+   - Reminder: Remind of pending quote
+   - Review: Request review after job completion
+2. Click template to select
+3. Template body populates in composer
+
+**Step 3: Customize Message**
+1. Edit subject line
+2. Customize body text
+3. Use variables for personalization:
+   - `{{name}}` - Customer's first name
+   - `{{company}}` - Company name
+4. Preview if needed
+
+**Step 4: Choose Recipients**
+1. Select from dropdown:
+   - All Leads
+   - New Leads
+   - Contacted Leads
+   - Converted Customers
+
+**Step 5: Send Campaign**
+1. Click "Send Campaign"
+2. Confirm recipient count
+3. Wait for success confirmation
+
+### Available Templates
+| Template | Best Used For |
+|---------|---------------|
+| Welcome | New lead submission |
+| Follow-up | No response after 2-3 days |
+| Reminder | Remind of pending quote |
+| Review | After job completion |
+
+### Automation Notes
+- Email campaigns are manually triggered (not scheduled)
+- No automatic email sends configured
+- VA initiates all email broadcasts
+
+---
+
+## 10. SMS Marketing Campaign
+
+### Prerequisites
+Twilio account must be configured in API Settings tab.
+
+### Step-by-Step Procedure
+
+**Step 1: Configure Twilio**
+1. Click "API Settings" tab
+2. Enter Account SID (starts with AC...)
+3. Enter Auth Token
+4. Enter Twilio Phone Number (with country code, e.g. +1234567890)
+5. Click "Save Twilio Settings"
+
+**Step 2: Access SMS Marketing**
+1. Click "Marketing" tab
+2. Select "SMS Marketing"
+
+**Step 3: Select or Create Template**
+1. Browse SMS templates:
+   - Welcome: Initial welcome message
+   - Follow-up: Pending quotes follow-up
+   - Reminder: Day before appointment
+   - Review: Request review after service
+   - Promo: Promotional campaigns
+2. Click to select
+3. Or write custom (max 160 characters)
+
+**Step 4: Choose Recipients**
+1. Select audience:
+   - All Leads
+   - New Leads
+   - Contacted Leads
+   - Converted Customers
+
+**Step 5: Send Campaign**
+1. Click "Send SMS Campaign"
+2. Confirm recipient count
+3. Wait for confirmation
+
+### Available Templates
+| Template | Best Used For |
+|---------|---------------|
+| Welcome | Initial welcome message |
+| Follow-up | Pending quotes |
+| Reminder | Day before appointment |
+| Review | After service |
+| Promo | Promotional campaigns |
+
+### Broadcast Messaging
+1. Click "Broadcast" option
+2. Compose single message
+3. Select recipient group
+4. Click "Send SMS" to broadcast to all
+
+### Automation Notes
+- SMS campaigns are manually triggered (not scheduled)
+- No automatic SMS sends configured
+- VA initiates all SMS broadcasts
+- Messages over 160 characters may be split by carrier
+
+---
+
+## 11. Managing Recurring Clients
 
 ### Step-by-Step Procedure
 
@@ -313,29 +428,56 @@ Manage subscription/recurring cleaning clients.
 
 **Step 2: Add Recurring Client**
 1. Click "Add Recurring Client"
-2. Fill in:
-   - Name
-   - Phone
-   - Email
-   - Plan type
-   - Frequency (Weekly/Bi-weekly/Monthly)
-   - Price
+2. Fill in form:
+   - Name (required)
+   - Phone (required)
+   - Email (required)
+   - Plan: Basic, Standard, or Premium
+   - Frequency: Weekly, Bi-weekly, or Monthly
+   - Price (required)
+3. Click "Add Recurring Client"
+
+**Step 3: Schedule Next Job**
+1. Find client card
+2. Click "Schedule" button
+3. Job created with:
+   - Client name
+   - Service (plan name)
    - Next scheduled date
+   - Client contact info
 
-**Step 3: Manage Existing Client**
-- **Pause**: Toggle status to paused
-- **Update**: Edit plan or price
-- **Cancel**: Remove client
+**Step 4: Pause/Resume Service**
+1. Click "Pause" on active client
+2. Client status changes to paused
+3. Click "Resume" to reactivate
 
-**Step 4: Convert to Job**
-When recurring date arrives:
-1. Create job from client details
-2. Assign crew
-3. Mark job as recurring
+**Step 5: Update Client Details**
+1. Click edit icon on client card
+2. Modify any field
+3. Click "Save Changes"
+
+### Plan Options
+| Plan | Description |
+|------|-------------|
+| Basic | Entry-level recurring service |
+| Standard | Mid-tier recurring maintenance |
+| Premium | Full-service weekly recurring |
+
+### Frequency Options
+| Frequency | Jobs per Month |
+|-----------|----------------|
+| Weekly | 4 |
+| Bi-weekly | 2 |
+| Monthly | 1 |
+
+### Automation Notes
+- Recurring jobs are NOT automatically scheduled
+- VA must manually click "Schedule" for each job
+- No cron/scheduler configured - all automation is manual trigger
 
 ---
 
-## 10. Daily Operations Checklist
+## 12. Daily Operations Checklist
 
 ### Morning (Start of Day)
 - [ ] Log into admin dashboard

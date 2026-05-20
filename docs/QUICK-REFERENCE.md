@@ -169,6 +169,47 @@ AVAILABLE (green) | BUSY (amber) | OFF (grey)
 
 ---
 
+## Marketing Templates
+
+### Email Templates
+- Welcome Email
+- Follow-up
+- Thank You
+
+### SMS Templates
+- Quick Reply
+- Follow-up
+- Appointment Reminder
+- Thank You
+- Promo - Referral
+
+### Sending Bulk
+1. Marketing tab → Email/SMS
+2. Select template or write custom
+3. Choose recipients
+4. Send Campaign
+
+---
+
+## Recurring Clients
+
+### Plans
+- Basic: $150-200/mo
+- Standard: $250-300/mo
+- Premium: $500-700/mo
+
+### Frequency
+- Weekly (4x/month)
+- Bi-weekly (2x/month)
+- Monthly (1x/month)
+
+### Actions
+- Pause/Resume service
+- Schedule next job
+- Edit details
+
+---
+
 ## URL Reference
 
 | Page | Route |
@@ -192,5 +233,5 @@ AVAILABLE (green) | BUSY (amber) | OFF (grey)
 | Crew | Staff list and status |
 | Invoices | Bills and payments |
 | Reports | Analytics and exports |
-| Marketing | Marketing tools |
+| Marketing | Email, SMS campaigns |
 | Customers | Recurring clients |

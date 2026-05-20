@@ -292,13 +292,13 @@ VITE_API_URL=http://localhost:3001
 - `AdminDashboard.jsx` - Main admin interface
 
 ### Dashboard Components
-- `LeadsList.jsx` - Lead CRM with search/filter
-- `JobsManager.jsx` - Kanban + calendar views
-- `CrewManagement.jsx` - Staff management
-- `Invoices.jsx` - Invoice list and payments
-- `Reports.jsx` - Analytics and exports
-- `MarketingCenter.jsx` - Marketing tools
-- `RecurringClients.jsx` - Subscription management
+- `LeadsList.jsx` - Lead CRM with search/filter, bulk import
+- `JobsManager.jsx` - Kanban board + calendar views, drag-and-drop
+- `CrewManagement.jsx` - Staff management, status toggles
+- `Invoices.jsx` - Invoice list, Stripe payments, email sending
+- `Reports.jsx` - Analytics dashboard, CSV exports
+- `MarketingCenter.jsx` - Email/SMS campaigns, analytics, API settings
+- `RecurringClients.jsx` - Subscription management, auto-scheduling
 - `CustomerProfile.jsx` - Customer details
 
 ### Public Components
@@ -328,15 +328,69 @@ calculateCleaningEstimate(formData)
 ```
 
 ### Dashboard Utils (`dashboard.js`)
+- `LEAD_STATUS` - Status enum (New, Contacted, Converted)
+- `JOB_STATUS` - Status enum (Pending, Confirmed, Scheduled, Completed, Cancelled)
+- `CREW_STATUS` - Status enum (available, busy, off)
 - `getLeadStatusColor()` - Status badge colors
 - `getJobStatusColor()` - Job status colors
 - `getCrewStatusColor()` - Crew status colors
 - `getInvoiceStatusColor()` - Invoice status colors
+- `getLeadSourceColor()` - Lead source badge colors
 - `formatDate()` - Date formatting
 
 ---
 
-## 9. Third-Party Integrations
+## 9. Marketing Center Features
+
+### Email Marketing
+- Pre-built templates: Welcome, Follow-up, Thank You
+- Custom template composer
+- Bulk send to filtered leads
+- Placeholder: `{{name}}` for personalization
+- Integration ready for: SendGrid, Mailgun, Amazon SES, SMTP
+
+### SMS Marketing
+- Pre-built templates: Quick Reply, Follow-up, Appointment Reminder, Thank You, Promo
+- 160 character limit with counter
+- Bulk send to filtered leads
+- Placeholders: `{{name}}`, `{{date}}`
+- Requires Twilio configuration
+
+### Analytics Dashboard
+- Total leads count
+- Converted customers count
+- Total jobs count
+- Conversion rate percentage
+- Lead status breakdown chart
+- Job status breakdown chart
+
+---
+
+## 10. Recurring Clients Features
+
+### Plan Types
+- Basic: $150-200/mo range
+- Standard: $250-300/mo range
+- Premium: $500-700/mo range
+
+### Frequency Options
+- Weekly (4 jobs/month)
+- Bi-weekly (2 jobs/month)
+- Monthly (1 job/month)
+
+### Auto-Scheduling
+- "Schedule" button creates job from client data
+- Uses client's next scheduled date
+- Marks job as recurring
+
+### Revenue Calculation
+- Weekly clients: price × 4
+- Bi-weekly clients: price × 2
+- Monthly clients: price × 1
+
+---
+
+## 11. Third-Party Integrations
 
 ### Stripe
 - Payment processing for invoices
