@@ -299,7 +299,7 @@ const Sidebar = memo(({
                   {tab.label}
                 </span>
               )}
-              <span className="hidden lg:inline text-xs opacity-60 ml-auto">{index + 1}</span>
+              
             </button>
           ))}
         </div>
@@ -956,7 +956,7 @@ const AdminDashboard = memo(() => {
                       {tab.badge}
                     </span>
                   )}
-                  <span className="text-xs opacity-60">{index + 1}</span>
+                  
                 </button>
               ))}
             </div>

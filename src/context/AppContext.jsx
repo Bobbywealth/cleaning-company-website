@@ -84,9 +84,15 @@ export const AppProvider = ({ children }) => {
   };
 
   const checkAuthStatus = () => {
-    const auth = checkAuth();
-    setUser(auth);
-    setLoading(false);
+    try {
+      const auth = checkAuth();
+      setUser(auth);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const refreshData = async () => {
