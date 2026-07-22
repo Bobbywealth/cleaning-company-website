@@ -66,8 +66,18 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     initializeDemoData();
     checkAuthStatus();
-    refreshData();
   }, []);
+
+  // Only fetch admin leads/jobs/stats when the user is actually authenticated.
+  // The public site (Home, Quote) mounts this provider too, and previously fired
+  // three CORS-blocked admin API calls on every page load (see QA: 15 console
+  // errors / 6 network failures per visit). After login the effect re-runs and
+  // populates the dashboard data as before.
+  useEffect(() => {
+    if (user?.isAuthenticated) {
+      refreshData();
+    }
+  }, [user?.isAuthenticated]);
 
   // Save data to localStorage
   useEffect(() => {
