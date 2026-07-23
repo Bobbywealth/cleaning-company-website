@@ -197,43 +197,44 @@ const Home = () => {
         </div>
 
         <div className="max-w-7xl mx-auto px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <div className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div className="relative shrink-0">
                 <img
                   src="https://iili.io/Btud5oF.th.png"
                   alt="360 Cleaning Co. - Professional Cleaning Services in Essex, Union, Hudson, Bergen County New Jersey"
-                  className="h-14 w-14 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20 transition-transform hover:scale-105"
+                  className="h-11 w-11 md:h-14 md:w-14 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-lg shadow-cyan-500/20 transition-transform hover:scale-105"
                 />
                 <div className="absolute -bottom-1 -right-1 bg-cyan-400 text-slate-950 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                   NJ
                 </div>
               </div>
-              <div>
-                <p className="font-bold text-xl leading-none text-white">360 Cleaning Co.</p>
-                <p className="text-xs text-cyan-400 font-medium">New Jersey's Premier Cleaners</p>
+              <div className="min-w-0 hidden xs:block sm:block">
+                <p className="font-bold text-base md:text-xl leading-none text-white truncate">360 Cleaning Co.</p>
+                <p className="text-xs text-cyan-400 font-medium truncate">New Jersey's Premier Cleaners</p>
               </div>
+              <p className="font-bold text-base leading-none text-white sm:hidden shrink-0">360 Cleaning</p>
             </div>
 
             <nav className="hidden lg:flex items-center gap-8">
-              <button onClick={() => scrollToSection(servicesRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
+              <button onClick={() => scrollToSection(servicesRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group inline-flex items-center py-3 -my-3 min-h-[44px]">
                 Services
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
               </button>
-              <button onClick={() => scrollToSection(packagesRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
+              <button onClick={() => scrollToSection(packagesRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group inline-flex items-center py-3 -my-3 min-h-[44px]">
                 Pricing
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
               </button>
-              <button onClick={() => scrollToSection(faqRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
+              <button onClick={() => scrollToSection(faqRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group inline-flex items-center py-3 -my-3 px-2 -mx-2 min-h-[44px] min-w-[44px] justify-center">
                 FAQ
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-2 right-2 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-[calc(100%-1rem)]"></span>
               </button>
-              <button onClick={() => scrollToSection(bookingRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group">
+              <button onClick={() => scrollToSection(bookingRef)} className="relative text-slate-200 hover:text-cyan-400 transition font-medium group inline-flex items-center py-3 -my-3 min-h-[44px]">
                 Book Now
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-400 transition-all group-hover:w-full"></span>
               </button>
               <div className="h-6 w-px bg-white/20"></div>
-              <button onClick={handleGetQuote} className="text-slate-300 hover:text-white transition flex items-center gap-2 text-sm">
+              <button onClick={handleGetQuote} className="text-slate-300 hover:text-white transition flex items-center gap-2 text-sm py-3 -my-3 min-h-[44px]">
                 <span>🔐</span>
                 <span>Admin</span>
               </button>
@@ -243,19 +244,19 @@ const Home = () => {
               <a 
                 href="tel:+18622854949" 
                 onClick={handlePhoneClick}
-                className="hidden md:flex items-center gap-2 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-4 py-2 rounded-xl transition border border-cyan-400/30"
+                className="hidden md:flex items-center gap-2 bg-cyan-400/10 hover:bg-cyan-400/20 text-cyan-400 px-4 py-3 -my-1 min-h-[44px] rounded-xl transition border border-cyan-400/30"
               >
                 <span>📞</span>
                 <span className="font-semibold">(862) 285-4949</span>
               </a>
-              <Button 
+              <Button
                 onClick={handleQuoteButtonClick}
-                className="hidden md:inline-flex bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold shadow-lg shadow-cyan-500/30 transition-all hover:shadow-cyan-500/50"
+                className="hidden md:inline-flex bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl font-bold shadow-lg shadow-cyan-500/30 transition-all hover:shadow-cyan-500/50 min-h-[44px] py-3 px-5"
               >
                 Get Free Quote
               </Button>
-              <button 
-                className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition"
+              <button
+                className="lg:hidden min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition shrink-0"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 aria-label="Toggle menu"
               >
@@ -303,16 +304,16 @@ const Home = () => {
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 mb-6" role="status">
               ✅ #1 Rated Cleaning Service in New Jersey
             </div>
-            <h1 id="hero-heading" className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
+            <h1 id="hero-heading" className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] break-words">
               New Jersey's Most Trusted <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Cleaning Professionals</span>
             </h1>
-            <p className="mt-6 text-lg text-slate-300 max-w-xl">
+            <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-xl break-words">
               Professional residential, commercial, deep cleaning, Airbnb, apartment, and restaurant cleaning serving all of New Jersey with fast quotes, easy booking, and reliable service teams.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <Button 
+              <Button
                 onClick={handleQuoteButtonClick}
-                className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-base font-bold shadow-lg shadow-cyan-500/30"
+                className="bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-base font-bold shadow-lg shadow-cyan-500/30 min-h-[44px]"
                 aria-label="Book professional cleaning service in New Jersey"
               >
                 Book Cleaning Now ✨
@@ -560,8 +561,8 @@ const Home = () => {
             <h2 id="booking-heading" className="text-4xl font-black mt-2">Request a Free Estimate in New Jersey</h2>
             <p className="text-slate-300 mt-4">Get your personalized cleaning quote for your New Jersey home or business. Our NJ team responds quickly with competitive pricing.</p>
             <div className="mt-8 space-y-4 text-slate-300">
-              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">📞</span><a href="tel:+18622854949" onClick={handlePhoneClick} className="hover:text-cyan-300 text-lg">(862) 285-4949</a></p>
-              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">✉️</span><a href="mailto:info@360cleaningco.com" className="hover:text-cyan-300">info@360cleaningco.com</a></p>
+              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">📞</span><a href="tel:+18622854949" onClick={handlePhoneClick} className="hover:text-cyan-300 text-lg py-2 -my-2 min-h-[44px] inline-flex items-center">(862) 285-4949</a></p>
+              <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">✉️</span><a href="mailto:info@360cleaningco.com" className="hover:text-cyan-300 py-2 -my-2 min-h-[44px] inline-flex items-center">info@360cleaningco.com</a></p>
               <p className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">📍</span><span>Serving <strong className="text-cyan-400">All of New Jersey</strong> including Jersey City, Newark, Hoboken, and surrounding areas</span></p>
             </div>
             <Button onClick={handleQuoteButtonClick} className="mt-8 bg-gradient-to-r from-cyan-400 to-cyan-500 text-slate-950 hover:from-cyan-300 hover:to-cyan-400 rounded-xl px-8 py-6 text-lg font-bold shadow-lg shadow-cyan-500/30">
@@ -634,21 +635,21 @@ const Home = () => {
 
       {/* Sticky Mobile CTA Bar - Optimized for Mobile Users */}
       <div className="mobile-sticky-cta md:hidden">
-        <div className="flex gap-2 max-w-lg mx-auto">
-          <a 
-            href="tel:+18622854949" 
+        <div className="flex gap-2 max-w-lg mx-auto px-1">
+          <a
+            href="tel:+18622854949"
             onClick={handlePhoneClick}
-            className="flex-1 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
+            className="flex-1 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white font-bold py-3 px-2 sm:px-4 rounded-2xl shadow-lg flex items-center justify-center gap-1 sm:gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
           >
-            <span className="text-2xl">📞</span>
-            <span className="text-sm font-extrabold">Call Now</span>
+            <span className="text-xl sm:text-2xl">📞</span>
+            <span className="text-xs sm:text-sm font-extrabold">Call Now</span>
           </a>
-          <button 
-            onClick={handleQuoteButtonClick} 
-            className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 active:from-cyan-500 active:to-blue-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
+          <button
+            onClick={handleQuoteButtonClick}
+            className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 active:from-cyan-500 active:to-blue-600 text-white font-bold py-3 px-2 sm:px-4 rounded-2xl shadow-lg flex items-center justify-center gap-1 sm:gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
           >
-            <span className="text-2xl">✨</span>
-            <span className="text-sm font-extrabold">Get Quote</span>
+            <span className="text-xl sm:text-2xl">✨</span>
+            <span className="text-xs sm:text-sm font-extrabold">Get Quote</span>
           </button>
         </div>
       </div>
