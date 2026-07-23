@@ -304,7 +304,7 @@ const Home = () => {
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 mb-6" role="status">
               ✅ #1 Rated Cleaning Service in New Jersey
             </div>
-            <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold md:font-black tracking-tight leading-[1.1] hyphens-auto [overflow-wrap:anywhere]">
+            <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold md:font-black tracking-tight leading-[1.1] hyphens-auto break-words">
               New Jersey's Most Trusted{' '}<span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 align-baseline">Cleaning&nbsp;Professionals</span>
             </h1>
             <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-xl [overflow-wrap:anywhere]">
