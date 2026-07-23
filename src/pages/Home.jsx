@@ -305,7 +305,7 @@ const Home = () => {
               ✅ #1 Rated Cleaning Service in New Jersey
             </div>
             <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold md:font-black tracking-tight leading-[1.1] hyphens-auto break-words">
-              New Jersey's Most Trusted{' '}<span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 align-baseline">Cleaning&nbsp;Professionals</span>
+              New Jersey's Most Trusted{' '}<span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 align-baseline">Cleaning Professionals</span>
             </h1>
             <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-xl [overflow-wrap:anywhere]">
               Professional residential, commercial, deep cleaning, Airbnb, apartment, and restaurant cleaning serving all of New Jersey with fast quotes, easy booking, and reliable service teams.
