@@ -94,3 +94,8 @@ input:focus, select:focus, textarea:focus {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Ensure main content clears the sticky mobile CTA bar */
+main {
+  padding-bottom: max(80px, env(safe-area-inset-bottom));
+}
