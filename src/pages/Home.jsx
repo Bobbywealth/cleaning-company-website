@@ -304,10 +304,10 @@ const Home = () => {
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 mb-6" role="status">
               ✅ #1 Rated Cleaning Service in New Jersey
             </div>
-            <h1 id="hero-heading" className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] break-words">
-              New Jersey's Most Trusted <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Cleaning Professionals</span>
+            <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold md:font-black tracking-tight leading-[1.1] hyphens-auto [overflow-wrap:anywhere]">
+              New Jersey's Most Trusted{' '}<span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 align-baseline">Cleaning&nbsp;Professionals</span>
             </h1>
-            <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-xl break-words">
+            <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-xl [overflow-wrap:anywhere]">
               Professional residential, commercial, deep cleaning, Airbnb, apartment, and restaurant cleaning serving all of New Jersey with fast quotes, easy booking, and reliable service teams.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -635,21 +635,21 @@ const Home = () => {
 
       {/* Sticky Mobile CTA Bar - Optimized for Mobile Users */}
       <div className="mobile-sticky-cta md:hidden">
-        <div className="flex gap-2 max-w-lg mx-auto px-1">
+        <div className="flex gap-1.5 max-w-md mx-auto px-1">
           <a
             href="tel:+18622854949"
             onClick={handlePhoneClick}
-            className="flex-1 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white font-bold py-3 px-2 sm:px-4 rounded-2xl shadow-lg flex items-center justify-center gap-1 sm:gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
+            className="flex-1 bg-green-500 hover:bg-green-400 active:bg-green-600 text-white font-extrabold py-3 px-1.5 rounded-2xl shadow-lg flex items-center justify-center gap-1 touch-manipulation transition-all active:scale-95 min-h-[52px]"
           >
-            <span className="text-xl sm:text-2xl">📞</span>
-            <span className="text-xs sm:text-sm font-extrabold">Call Now</span>
+            <span className="text-lg leading-none">📞</span>
+            <span className="text-xs leading-none">Call</span>
           </a>
           <button
             onClick={handleQuoteButtonClick}
-            className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 active:from-cyan-500 active:to-blue-600 text-white font-bold py-3 px-2 sm:px-4 rounded-2xl shadow-lg flex items-center justify-center gap-1 sm:gap-2 touch-manipulation transition-all active:scale-95 min-h-[56px]"
+            className="flex-1 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 active:from-cyan-500 active:to-blue-600 text-white font-extrabold py-3 px-1.5 rounded-2xl shadow-lg flex items-center justify-center gap-1 touch-manipulation transition-all active:scale-95 min-h-[52px]"
           >
-            <span className="text-xl sm:text-2xl">✨</span>
-            <span className="text-xs sm:text-sm font-extrabold">Get Quote</span>
+            <span className="text-lg leading-none">✨</span>
+            <span className="text-xs leading-none">Quote</span>
           </button>
         </div>
       </div>
