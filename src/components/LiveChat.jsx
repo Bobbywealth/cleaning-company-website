@@ -216,7 +216,7 @@ const LiveChat = () => {
 
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-2xl shadow-cyan-500/30 flex items-center justify-center text-white hover:scale-105 transition-transform"
+        className="fixed bottom-24 right-4 z-50 w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-2xl shadow-cyan-500/30 flex items-center justify-center text-white hover:scale-105 transition-transform md:bottom-6 md:right-6"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         aria-label={isOpen ? 'Close chat' : 'Open live chat'}
